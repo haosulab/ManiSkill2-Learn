@@ -1,0 +1,330 @@
+# ManiSkill2-Learn
+
+ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manipulation Skill Challenge 2022](https://sapien.ucsd.edu/challenges/maniskill/2022/), a physics-rich generalizable manipulation skill benchmark over diverse objects and diverse rigid & soft-body environments with large-scale demonstrations.
+
+Updates will be posted here.
+- [ManiSkill2-Learn](#maniskill2-learn)
+  - [Getting Started](#getting-started)
+    - [Installation](#installation)
+  - [Simple Workflow](#simple-workflow)
+    - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations)
+    - [Training and Evaluation](#training-and-evaluation)
+  - [More Detailed Workflow](#more-detailed-workflow)
+    - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations-1)
+      - [Demonstration Format and Environment Wrapper](#demonstration-format-and-environment-wrapper)
+      - [Further Functionalities on Rendering and Interactively Viewing Demonstrations](#further-functionalities-on-rendering-and-interactively-viewing-demonstrations)
+      - [Merging Demonstration Trajectories](#merging-demonstration-trajectories)
+      - [Rigid and Soft Body Demonstrations](#rigid-and-soft-body-demonstrations)
+      - [Customizing Demonstrations and Environment Wrappers](#customizing-demonstrations-and-environment-wrappers)
+    - [Training and Evaluation](#training-and-evaluation-1)
+      - [Overview](#overview)
+      - [Configuration Files, Networks, and Algorithms](#configuration-files-networks-and-algorithms)
+      - [Simulation and Network Parallelism](#simulation-and-network-parallelism)
+      - [Some things to keep in mind](#some-things-to-keep-in-mind)
+  - [Other Useful Functionalities](#other-useful-functionalities)
+    - [Loading h5 files and handling iterated dictionaries with GDict](#loading-h5-files-and-handling-iterated-dictionaries-with-gdict)
+  - [Acknowledgements](#acknowledgements)
+  - [Citation](#citation)
+  - [License](#license)
+
+## Getting Started
+
+### Installation
+
+ManiSkill2-Learn requires `python >= 3.8` and `cuda 11.3`. For pytorch, our framework is tested on `pytorch == 1.11.0+cu113` and we recommend installing it. We do not recommend installing `pytorch == 1.12` due to a known [issue](https://github.com/pytorch/pytorch/issues/80809). When `pytorch >= 1.12.1` comes out in the future, you may choose to install the newer version.
+
+To get started, enter the parent directory of where you installed [ManiSkill2](https://github.com/haosulab/ManiSkill2) and clone this repo. Assuming the anaconda environment you installed ManiSkill2 is `mani_skill2`, execute the following commands (**note that the ordering is strict**):
+
+```
+cd {parent_directory_of_ManiSkill2}
+conda activate mani_skill2 #(activate the anaconda env where ManiSkill2 is installed)
+git clone TODO
+cd TODO
+conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.3 -c pytorch
+pip install pytorch3d
+pip install ninja
+pip install -e .
+pip install protobuf==3.19.0
+```
+
+If you would like to use SparseConvNet to perform 3D manipulation learning, install `torchsparse` and its releated dependencies (the `torchsparse` below is forked from the original repo with bug fix and additional normalization functionalities):
+
+```
+sudo apt-get install libsparsehash-dev # brew install google-sparsehash if you use Mac OS
+pip install torchsparse@git+https://github.com/lz1oceani/torchsparse.git
+```
+
+## Simple Workflow
+
+### Converting and Viewing Demonstrations
+
+**Before you convert (render) any demonstrations using ManiSkill2-Learn**, make sure that the demonstration has been converted to your desired control mode using the script from the ManiSkill2 repo (by following instructions [here](https://github.com/haosulab/ManiSkill2/#demonstrations)). ManiSkill2-Learn only supports customizing observation processing for demonstration generation / agent learning, and does not support control mode conversion.
+
+The original demonstration files from ManiSkill2 do not contain visual information as they would be too large to download. Therefore, we provided helpful functionalities in `tools/convert_state.py` to locally convert environment-state trajectories in the demonstration files into visual trajectories that can be used for training in ManiSkill2-Learn. Run `tools/convert_state.py -h` for detailed command options.
+
+An example script to render point cloud demonstrations is shown below:
+
+```
+# Replace `PATH` with appropriate path and `ENV` with appropriate environment name
+
+python tools/convert_state.py --env-name ENV_NAME --num-procs 1 \
+--traj-name PATH/trajectory.none.pd_joint_delta_pos.h5 \
+--json-name PATH/trajectory.none.pd_joint_delta_pos.json \
+--output-name PATH/trajectory.none.pd_joint_delta_pos_pcd.h5 \
+--control-mode pd_joint_delta_pos --max-num-traj -1 --obs-mode pointcloud \
+--n-points 1200 --obs-frame base --reward-mode dense --render
+```
+
+Further details on advanced usage and customization are presented [here](#converting-and-viewing-demonstrations-1).
+
+Note that the `--render` option allows you to view the demonstration trajectories in Vulkan. However, `--render` slows down the demonstration conversion process, and should only be invoked when `--num-procs=1`. Without `--render` option, you can use multi-processing to accelerate demonstration conversion speed by setting `--num-procs=X`.
+
+To use the Vulkan viewer, drag the mouse while `right-click` to rotate; press `A/D` to translate the view; `scroll` or `W/S` to zoom in and out; `left-click` to select a particular object part; once an object part is selected, you can press `f` to focus on the object part, such that view rotation and zooming are centered on this object part; you can also view its collision shape through the side bar, etc. 
+
+### Training and Evaluation
+
+Maniskill2_learn implements common Reinforcement Learning algorithms, including Behavior Cloning (BC), Proximal Policy Gradient (PPO), Demonstration-Augmented Policy Gradient (DAPG), Soft Actor-Critic (SAC), and Generative-Adversarial Imitation Learning (GAIL). For example, to train a PPO Agent on `PickCube-v0` with point cloud observation using the default algorithm configs in `configs/mfrl/ppo/maniskill2_pn.py`, run the following command (note that PPO is a demonstration-free algorithm):
+
+```
+python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn.py \
+--work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
+--cfg-options "env_cfg.env_name=PickCube-v0" "env_cfg.obs_mode=pointcloud" \
+"env_cfg.n_points=1200" "env_cfg.control_mode=pd_joint_delta_pos" \
+"rollout_cfg.num_procs=5" \
+"eval_cfg.num=100" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
+"eval_cfg.num_procs=5"
+
+# "num_procs" controls parallelism during training. Details are described in later sections.
+
+# The above command does automatic evaluation after training. 
+# Alternatively, you can manually evaluate a model checkpoint 
+# by appending --evaluation and --resume-from YOUR_LOGGING_DIRECTORY/models/SOME_CHECKPOINT.ckpt 
+# to the above commands.
+```
+
+To train a DAPG agent on `PegInsertionSide-v0` with point cloud observation, an example command is shown below (note that DAPG requires loading demonstrations):
+
+```
+python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn_dapg.py \
+--work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
+--cfg-options "env_cfg.env_name=PegInsertionSide-v0" "env_cfg.obs_mode=pointcloud" \
+"env_cfg.n_points=1200" "env_cfg.control_mode=pd_joint_delta_pos" \
+"rollout_cfg.num_procs=5" \
+"agent_cfg.demo_replay_cfg.buffer_filenames=PATH_TO_POINT_CLOUD_DEMO.h5" \
+"eval_cfg.num=100" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
+"eval_cfg.num_procs=5"
+
+# To manually evaluate the model, 
+# add --evaluation and --resume-from YOUR_LOGGING_DIRECTORY/models/SOME_CHECKPOINT.ckpt 
+# to the above commands.
+```
+
+For point cloud-based learning, there are some useful configurations you can add to `--cfg-options`. A few examples:
+- `"env_cfg.obs_frame=ee"` : transform point cloud to the end-effector frame (instead of the robot base frame by default, i.e. `"env_cfg.obs_frame=base"`) 
+- `"env_cfg.n_goal_points=50"` : if the environment observation contains goal position ("goal_pos"), randomly sample 50 points near the goal position and append to the point cloud; this allows goal info to be visual; if an environment does not have goal position (e.g. in PegInsertionSide-v0), error will be raised
+
+**Note that configuration options like these could significantly affect performance.** For `PickCube-v0`, simultaneously adding both config options above allows PPO to achieve a very high success rate within a few million steps.
+
+For example commands on more algorithms, see `scripts/maniskill/`.
+
+For further details about specific arguments and configs, along with algorithm / wrapper customization, please read [here](#training-and-evaluation-1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## More Detailed Workflow
+
+### Converting and Viewing Demonstrations
+
+#### Demonstration Format and Environment Wrapper
+
+For demonstrations converted through `tools/convert_state.py`, the rendered point cloud / RGB-D observations from the environment are post-processed through environment wrappers in `maniskill2_learn/envs/wrappers.py` and saved in the output file. Since training uses the same wrapper as during demonstration convertion, the output demonstration file can be directly loaded into the replay buffer.
+
+The **converted demonstration** (not the original demonstration containing no observation information) has a format similar to the following:
+
+```
+from maniskill2_learn.utils.data import GDict
+f = GDict.from_hdf5(TRAJ_PATH)
+print(f.keys()) # dict_keys(['traj_0', 'traj_1', ...])
+traj_0 = f['traj_0']
+
+print(GDict(traj_0).shape.memory)
+# Depending on --obs-mode, --n-points, etc, this will print, e.g.
+# {'actions': (143, 8), 'dones': (143, 1), 'rewards': (143, 1), 'episode_dones': (143, 1), 
+# 'is_truncated': (143, 1), 'obs': {'frame_related_states': (143, 2, 3), 
+# 'rgb': (143, 1200, 3), 'state': (143, 24), 'to_frames': (143, 2, 4, 4), 
+# 'xyz': (143, 1200, 3)}, 'worker_indices': (143, 1)}
+```
+
+#### Further Functionalities on Rendering and Interactively Viewing Demonstrations
+
+We provide further functionalities on rendering and interactively viewing demonstrations in `maniskill2_learn/apis/render_traj.py`. To use the script, modify the corresponding arguments inside the script. See `render_trajectories` and `render_o3d` functions in the script for more details. 
+
+#### Merging Demonstration Trajectories
+
+We provide useful functionalities to merge multiple HDF5 files with a certain pattern into a single file in `tools/merge_h5.py`.
+
+#### Rigid and Soft Body Demonstrations
+
+`tools/convert_state.py` is capable of automatically handling both rigid-body demonstration and soft-body demonstration **source files** published at ManiSkill2022 challenge. For demonstrations in rigid-body environments, the source file provides environment states at each time step, so we set the corresponding environment state at each time step and render to obtain visual observations. For demonstrations in soft-body environments, the environment state is provided only at the first environment state (it would have been too large to store environment states at all steps since the number of particles is large). In this case, we rollout actions from the demonstrations with the same seed as when generating demonstrations to obtain visual observations.
+
+Note that, regardless of whether a **source file** (i.e. the file containing environment state(s)) belongs to a rigid body environment or a soft body environment, the final output file (i.e. the file in `--output-name`) contains trajectories post-processed through the observation wrapper at `maniskill2_learn/env/wrappers.py`.
+
+
+#### Customizing Demonstrations and Environment Wrappers
+
+The environment and wrapper construction first go through the `make_gym_env` function in `maniskill2_learn/env/env_utils.py`. After the environment and the wrapper have been constructed, during training / evaluation / demonstration generation, the `observation` function under the `ManiSkll2_ObsWrapper` class in `maniskill2_learn/env/wrappers.py` post-processes observations from the environment. Therefore, if you wish to support advanced functionalities, e.g. advanced point cloud downsampling and coordinate transformation, both `maniskill2_learn/env/env_utils.py` and `maniskill2_learn/env/wrappers.py` need to be modified.
+
+
+
+
+
+
+### Training and Evaluation
+
+#### Overview
+
+At the high level, `maniskill2_learn/apis/run_rl.py` provides a unified framework for training and evaluation, and is invoked through `python maniskill2_learn/apis/run_rl.py CONFIG_FILE --SOME_ARGS --cfg-options SOME_CONFIG_OPTIONS`. Here `CONFIG_FILE` is a configuration file in `configs/`; `SOME_ARGS` are some custom arguments from `run_rl.py`; `--cfg-options` are config options that override the original configs in `CONFIG_FILE`. 
+
+If `maniskill2_learn/apis/run_rl.py` is invoked with training mode, `maniskill2_learn/apis/run_rl.py` will invoke `maniskill2_learn/apis/train_rl.py` to handle specific training steps. If `maniskill2_learn/apis/run_rl.py` is invoked with evaluation mode (i.e. `--evaluation`), then `maniskill2_learn/env/evaluation.py` will handle the evaluation process. Success rate is reported as evaluation results.
+
+#### Configuration Files, Networks, and Algorithms
+
+We have included several example configuration files in `configs/` for training an agent using various algorithms with RGB-D or point cloud observation modes. Example scripts are in `scripts/`. 
+
+An agent is typically an actor-critic agent (`maniskill2_learn/networks/applications/actor_critic.py`). Algorithms are implemented in `maniskill2_learn/methods/`. Network architectures are implemented in `maniskill2_learn/networks/`. 
+
+#### Simulation and Network Parallelism
+
+ManiSkill2-learn provides an easy-to-use interface to support simulation parallelism and network training / evaluation parallelism. 
+- In `maniskill2_learn/apis/run_rl.py`, you can specify `--gpu-ids` for multi-gpu network training and `--sim-gpu-ids` for multi-gpu environment simulation. For example, you can use `--sim-gpu-ids 0` to do simulation and `--gpu-ids 1 2` to do network training. If `--sim-gpu-ids` is not specified, it becomes the same as `--gpu-ids`, i.e. simulation and network training are done on the same GPU.
+- In `--cfg-options`, you can use `rollout_cfg.num_procs=X` to specify the number of parallel environments per simulation gpu in `--sim-gpu-ids`. You can use `eval_cfg.num_procs` to specify the number of parallel processes during evaluation (final results are merged).
+- Note that during training, if multiple simulation GPUs are used, then some arguments in the configuration file (e.g. `train_cfg.n_steps`, `replay_cfg.capacity`) are effectively multiplied by the number of simulation GPUs. Similarly, if multiple network-training GPUs are used, then some arguments (e.g. `agent_cfg.batch_size`) are effectively multiplied by the number of network-training GPUs.
+
+**Important note for soft-body environments**: soft-body environments typically consume much more memory than a single rigid-body environment and runs much slower. However, as of now, they do not allow multi-gpu training. Thus currently, the only way to train an agent on these environments is by setting `CUDA_VISIBLE_DEVICES=X` and `--gpu-ids=0`. In addition, to keep the same number of parallel processes during rollout, you need to set a smaller batch size than for rigid-body environments. You can also modify our code in order to accumulate gradient steps.
+
+#### Some things to keep in mind
+
+When training agents with demonstrations (e.g. DAPG, GAIL), the demonstration should be generated in a way that exactly matches the environment configurations used during training. Pay special attention to e.g. observation mode, point cloud downsampling strategy, observation frame, goal point sampling, etc.
+
+
+
+
+
+
+
+## Other Useful Functionalities
+### Loading h5 files and handling iterated dictionaries with GDict
+
+We provide `GDict` in `maniskill2_learn.utils.data` for convenient handling of iterated dictionaries in the replay buffer and in HDF5 files. To load a `.h5` trajectory with `GDict` and visualize array shapes & dtypes, you can use the following code snippet:
+
+```
+from maniskill2_learn.utils.data import GDict
+f = GDict.from_hdf5(TRAJ_PATH)
+print(f.keys()) # prints 'traj_0', 'traj_1', etc
+traj_0 = GDict(f['traj_0'])
+
+print(traj_0.shape.memory) 
+# prints the array shape of all values in the iterated dict
+# For example, {'actions': (344, 8), 'dones': (344, 1), 'rewards': (344, 1), 'episode_dones': (344, 1), 
+# 'is_truncated': (344, 1),'obs': {'frame_related_states': (344, 2, 3), 
+# 'rgb': (344, 1200, 3), 'state': (344, 24), 
+# 'to_frames': (344, 2, 4, 4), 'xyz': (344, 1200, 3)}}
+
+print(traj_0.dtype)
+# For example: {'/actions': 'float32', '/dones': 'bool', '/episode_dones': 'bool', 
+# '/is_truncated': 'bool', '/obs/frame_related_states': 'float32', 
+# '/obs/rgb': 'float32', '/obs/state': 'float32', '/obs/to_frames': 'float32', 
+# '/obs/xyz': 'float32', '/worker_indices': 'int32'}
+```
+
+`GDict` also supports many useful functionalities, e.g. wrapping / unwrapping; type casting; transferring data between numpy & torch and between cpu & gpu; detaching a GDict of torch tensors. For example,
+
+```
+import torch, numpy as np
+from maniskill2_learn.utils.data import GDict
+d = GDict({'a': torch.randn(3,4), 'b': {'c': torch.randn(2,3)}})
+
+# numpy <-> torch
+assert d['a'].dtype == torch.float32
+d_np = d.to_numpy()
+assert d_np['a'].dtype == np.float32
+d_2 = d_np.to_torch(device="cpu") # note that tensors in d_2 shares the memory with those in d
+assert d_2['a'].dtype == torch.float32
+d_2 = d_np.to_torch(device="cpu", non_blocking=True) # to_torch supports 'non_blocking' to accelerate speed
+assert d_2['a'].dtype == torch.float32
+
+# Type casting
+d_i8 = d.astype('int8')
+assert d_i8['a'].dtype == torch.int8
+d_np_i16 = d_np.astype('int16')
+assert d_np_i16['a'].dtype == np.int16
+
+# cpu <-> gpu
+d_cuda = d_np.to_torch(device='cuda:0')
+print(d_cuda['a'].device) # cuda:0
+d_cuda = d.cuda('cuda:0')
+print(d_cuda['a'].device) # cuda:0
+d_cpu = d_cuda.cpu()
+print(d_cpu['a'].device) # cpu
+
+# Unwrapping from GDict if 'wrapper=False' is taken as an argument in 'to_torch' and 'to_numpy'.
+# Use GDict(d) to wrap GDict on top of any dictionary of arrays
+d_2 = d_np.to_torch(device="cpu", non_blocking=True, wrapper=False)
+assert isinstance(d_2, dict)
+d_3 = GDict(d_2).to_torch(device='cuda:0', non_blocking=True, wrapper=False)
+assert isinstance(d_3, dict)
+d_np_3 = GDict(d_3).to_numpy(wrapper=False)
+assert isinstance(d_np_3, dict)
+
+# Detach a GDict of torch tensors
+x = GDict({'a': torch.randn(3, requires_grad=True)})
+y = torch.randn(3, requires_grad=True)
+x_detach = x.detach()
+print(x['a'].requires_grad) # True
+print(x_detach['a'].requires_grad) # False
+loss = x_detach['a'] + y
+loss.sum().backward()
+print(y.grad) # tensor([1., 1., 1.])
+print(x['a'].grad) # None
+```
+
+
+In addition to `GDict`, there is `DictArray` that behaves very similar to `GDict`, except with an additional check that all elements in `DictArray` has the same batch dimension (i.e. `x.shape[0]` is the same for all `x` in a `DictArray`). To import `DictArray`, use `from maniskill2_learn.utils.data import DictArray`.
+
+## Acknowledgements
+
+Some functions (e.g. config system, checkpoint) are adopted from [MMCV](https://github.com/open-mmlab/mmcv):
+
+GAIL implementation and hyperparameters are modified from Hao Shen, Weikang Wan, and He Wang's ManiSkill2021 challenge submission: [paper](https://arxiv.org/abs/2203.02107) and [code](https://github.com/wkwan7/EPICLab-ManiSkill).
+
+## Citation
+
+```
+@inproceedings{mu2021maniskill,
+  title={ManiSkill: Generalizable Manipulation Skill Benchmark with Large-Scale Demonstrations},
+  author={Mu, Tongzhou and Ling, Zhan and Xiang, Fanbo and Yang, Derek Cathera and Li, Xuanlin and Tao, Stone and Huang, Zhiao and Jia, Zhiwei and Su, Hao},
+  booktitle={Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2)},
+  year={2021}
+}
+```
+
+## License
+ManiSkill-Learn is released under the Apache 2.0 license, while some specific operations in this library are with other licenses.
