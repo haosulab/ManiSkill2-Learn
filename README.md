@@ -39,8 +39,8 @@ To get started, enter the parent directory of where you installed [ManiSkill2](h
 ```
 cd {parent_directory_of_ManiSkill2}
 conda activate mani_skill2 #(activate the anaconda env where ManiSkill2 is installed)
-git clone TODO
-cd TODO
+git clone git@github.com:haosulab/ManiSkill2-Learn
+cd ManiSkill2-Learn
 conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.3 -c pytorch
 pip install pytorch3d
 pip install ninja
