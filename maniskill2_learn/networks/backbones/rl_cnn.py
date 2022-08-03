@@ -29,7 +29,13 @@ class CNNBase(ExtendedModule):
                 # inputs images must not have been normalized before
                 feature.append((inputs["rgb"] / 255.0))
             if "depth" in inputs:
-                feature.append(inputs["depth"].astype(np.float32))
+                depth = inputs["depth"]
+                if isinstance(depth, torch.Tensor):
+                    feature.append(depth.float())
+                elif isinstance(depth, np.ndarray):
+                    feature.append(depth.astype(np.float32))
+                else:
+                    raise NotImplementedError()
             if "seg" in inputs:
                 feature.append(inputs["seg"])
             feature = torch.cat(feature, dim=1)
