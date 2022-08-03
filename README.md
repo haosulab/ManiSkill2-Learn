@@ -21,6 +21,7 @@ Updates will be posted here.
       - [Configuration Files, Networks, and Algorithms](#configuration-files-networks-and-algorithms)
       - [Simulation and Network Parallelism](#simulation-and-network-parallelism)
       - [Some things to keep in mind](#some-things-to-keep-in-mind)
+  - [Submission Example](#submission-example)
   - [Other Useful Functionalities](#other-useful-functionalities)
     - [Loading h5 files and handling iterated dictionaries with GDict](#loading-h5-files-and-handling-iterated-dictionaries-with-gdict)
   - [Acknowledgements](#acknowledgements)
@@ -148,7 +149,6 @@ For further details about specific arguments and configs, along with algorithm /
 
 
 
-
 ## More Detailed Workflow
 
 ### Converting and Viewing Demonstrations
@@ -223,6 +223,21 @@ ManiSkill2-learn provides an easy-to-use interface to support simulation paralle
 #### Some things to keep in mind
 
 When training agents with demonstrations (e.g. DAPG, GAIL), the demonstration should be generated in a way that exactly matches the environment configurations used during training. Pay special attention to e.g. observation mode, point cloud downsampling strategy, observation frame, goal point sampling, etc.
+
+
+
+
+
+
+
+
+
+## Submission Example
+
+To facilitate ManiSkill2022 challenge submission, we have added a submission example in `submission_example/` that uses ManiSkill2-Learn. Please refer to the file comments for specific instructions.
+
+
+
 
 
 
@@ -308,6 +323,13 @@ print(x['a'].grad) # None
 
 
 In addition to `GDict`, there is `DictArray` that behaves very similar to `GDict`, except with an additional check that all elements in `DictArray` has the same batch dimension (i.e. `x.shape[0]` is the same for all `x` in a `DictArray`). To import `DictArray`, use `from maniskill2_learn.utils.data import DictArray`.
+
+
+
+
+
+
+
 
 ## Acknowledgements
 
