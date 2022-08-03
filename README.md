@@ -97,6 +97,10 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn.py \
 
 # "num_procs" controls parallelism during training. Details are described in later sections.
 
+# FPS reported denotes the number of *control steps* per second.
+# Note that the default simulation frequency in ManiSkill2 environments is 500hz, control frequency is 20hz.
+# Therefore, 1 control step = 25 simulation steps.
+
 # The above command does automatic evaluation after training. 
 # Alternatively, you can manually evaluate a model checkpoint 
 # by appending --evaluation and --resume-from YOUR_LOGGING_DIRECTORY/models/SOME_CHECKPOINT.ckpt 
