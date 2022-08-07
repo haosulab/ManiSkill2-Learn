@@ -91,7 +91,7 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn.py \
 --work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
 --cfg-options "env_cfg.env_name=PickCube-v0" "env_cfg.obs_mode=pointcloud" \
 "env_cfg.n_points=1200" "env_cfg.control_mode=pd_joint_delta_pos" \
-"rollout_cfg.num_procs=5" \
+"env_cfg.reward_mode=dense" "rollout_cfg.num_procs=5" \
 "eval_cfg.num=100" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
 "eval_cfg.num_procs=5"
 
@@ -114,7 +114,7 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn_dapg.py \
 --work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
 --cfg-options "env_cfg.env_name=PegInsertionSide-v0" "env_cfg.obs_mode=pointcloud" \
 "env_cfg.n_points=1200" "env_cfg.control_mode=pd_joint_delta_pos" \
-"rollout_cfg.num_procs=5" \
+"env_cfg.reward_mode=dense" "rollout_cfg.num_procs=5" \
 "agent_cfg.demo_replay_cfg.buffer_filenames=PATH_TO_POINT_CLOUD_DEMO.h5" \
 "eval_cfg.num=100" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
 "eval_cfg.num_procs=5"
