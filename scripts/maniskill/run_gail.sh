@@ -5,7 +5,7 @@
 python maniskill2_learn/apis/run_rl.py configs/mfrl/gail/maniskill2_pn.py \
 --gpu-ids 0 --work-dir YOUR_LOGGING_DIRECTORY --print-steps 16 \
 --cfg-options "env_cfg.env_name=PlugCharger-v0" "env_cfg.control_mode=pd_joint_delta_pos" \
-"replay_cfg.buffer_filenames=[PATH_TO_DEMO.h5]" \
+"env_cfg.reward_mode=dense" "replay_cfg.buffer_filenames=[PATH_TO_DEMO.h5]" \
 "expert_replay_cfg.buffer_filenames=[PATH_TO_DEMO.h5]"
 
 # Using multiple GPUs will increase training speed; 
