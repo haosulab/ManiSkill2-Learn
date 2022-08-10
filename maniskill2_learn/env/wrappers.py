@@ -235,7 +235,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
              'agent': 
                 {'qpos': 9, 'qvel': 9, 'controller': {'arm': {}, 'gripper': {}}, 'base_pose': 7}, 
              'extra': 
-                {'tcp_pose': 7, 'goal_pos': 3, 'tcp_to_goal_pos': 3}}            
+                {'tcp_pose': 7, 'goal_pos': 3}}            
             """
 
             obs = observation
@@ -249,6 +249,10 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             depth = np.concatenate(depth, axis=2)
             obs.pop("image")
             
+            if 'tcp_pose' in obs['extra'].keys() and 'goal_pos' in obs['extra'].keys():
+                obs['extra']['tcp_to_goal_pos'] = (
+                    obs['extra']['goal_pos'] - obs['extra']['tcp_pose'][:3]
+                )
             s = flatten_state_dict(obs)
 
             if self.img_size is not None and self.img_size != (rgb.shape[0], rgb.shape[1]):
@@ -272,7 +276,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
              'agent': 
                 {'qpos': 9, 'qvel': 9, 'controller': {'arm': {}, 'gripper': {}}, 'base_pose': 7}, 
              'extra': 
-                {'tcp_pose': 7, 'goal_pos': 3, 'tcp_to_goal_pos': 3}
+                {'tcp_pose': 7, 'goal_pos': 3}
             }
             """
 
@@ -295,6 +299,10 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             ret['xyz'] = apply_pose_to_points(ret['xyz'], to_origin)
 
             obs_extra_keys = observation['extra'].keys()
+            tcp_pose = None
+            if 'tcp_pose' in obs_extra_keys:
+                tcp_pose = observation['extra']['tcp_pose']
+                tcp_pose = Pose(p=tcp_pose[:3], q=tcp_pose[3:])
             goal_pos = None
             goal_pose = None
             if 'goal_pos' in obs_extra_keys:
@@ -304,13 +312,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 goal_pose = observation['extra']['goal_pose']
                 goal_pose = Pose(p=goal_pose[:3], q=goal_pose[3:])
             tcp_to_goal_pos = None
-            tcp_to_goal_pose = None
-            if 'tcp_to_goal_pos' in obs_extra_keys:
-                tcp_to_goal_pos = observation['extra']['tcp_to_goal_pos']
-            elif 'tcp_to_goal_pose' in obs_extra_keys:
-                tcp_to_goal_pos = observation['extra']['tcp_to_goal_pose'][:3]
-                tcp_to_goal_pose = observation['extra']['tcp_to_goal_pose']
-                tcp_to_goal_pose = Pose(p=tcp_to_goal_pose[:3], q=tcp_to_goal_pose[3:])
+            if tcp_pose is not None and goal_pos is not None:
+                tcp_to_goal_pos = goal_pos - observation['extra']['tcp_pose'][:3]
 
             if self.n_goal_points > 0:
                 assert goal_pos is not None, (
@@ -327,9 +330,9 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             frame_related_states = []
             base_info = apply_pose_to_point(observation['agent']['base_pose'][:3], to_origin)
             frame_related_states.append(base_info)                
-            if 'tcp_pose' in observation['extra'].keys():
-                tcp_info = apply_pose_to_point(observation['extra']['tcp_pose'][:3], to_origin)
-                frame_related_states.append(tcp_info)            
+            if tcp_pose is not None:
+                tcp_info = apply_pose_to_point(tcp_pose.p, to_origin)
+                frame_related_states.append(tcp_info)          
             if goal_pos is not None:
                 goal_info = apply_pose_to_point(goal_pos, to_origin)
                 frame_related_states.append(goal_info)
@@ -355,17 +358,12 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 frame_goal_related_poses.append(
                     np.hstack([pose_wrt_origin.p, pose_wrt_origin.q])
                 )
-            if tcp_to_goal_pose is not None:
-                # tcp_to_goal_pose is centered at end-effector frame
-                if self.obs_frame == 'ee':
-                    pose_wrt_origin = tcp_to_goal_pose
-                else:
-                    tcp_pose = observation['extra']['tcp_pose']
-                    p, q = tcp_pose[:3], tcp_pose[3:]
-                    pose_wrt_origin = to_origin * Pose(p=p, q=q) * tcp_to_goal_pose
-                frame_goal_related_poses.append(
-                    np.hstack([pose_wrt_origin.p, pose_wrt_origin.q])
-                )
+                if tcp_pose is not None:
+                    pose_wrt_origin = goal_pose * tcp_pose.inv() # T_{tcp->goal}^{world}
+                    pose_wrt_origin = to_origin * pose_wrt_origin
+                    frame_goal_related_poses.append(
+                        np.hstack([pose_wrt_origin.p, pose_wrt_origin.q])
+                    )
             if len(frame_goal_related_poses) > 0:
                 frame_goal_related_poses = np.stack(frame_goal_related_poses, axis=0)
                 ret['frame_goal_related_poses'] = frame_goal_related_poses
@@ -376,10 +374,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             base_frame = (to_origin * Pose(p=base_pose_p, q=base_pose_q)).inv().to_transformation_matrix()
             ret['to_frames'].append(base_frame)
 
-            if 'tcp_pose' in obs_extra_keys:
-                pose = observation['extra']['tcp_pose']
-                pose = Pose(p=pose[:3], q=pose[3:])
-                hand_frame = (to_origin * pose).inv().to_transformation_matrix()
+            if tcp_pose is not None:
+                hand_frame = (to_origin * tcp_pose).inv().to_transformation_matrix()
                 ret['to_frames'].append(hand_frame)
             if goal_pose is not None:
                 goal_frame = (to_origin * goal_pose).inv().to_transformation_matrix()

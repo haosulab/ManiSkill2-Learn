@@ -448,7 +448,7 @@ class PPO(BaseAgent):
             return False
 
         if self.critic_warmup_epoch > 0:
-            logger.info("**Warming up critic at the beginning of training; this may cause reported ETA to be slower than actual ETA**")
+            logger.info("**Warming up critic at the beginning of training; this causes reported ETA to be slower than actual ETA**")
         for i in range(self.critic_warmup_epoch):
             run_over_buffer(i, "v")
 
