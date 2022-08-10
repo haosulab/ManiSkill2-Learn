@@ -340,6 +340,12 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 gripper_info = observation['extra']['gripper_pose'][:3]
                 gripper_info = apply_pose_to_point(gripper_info, to_origin)
                 frame_related_states.append(gripper_info)
+            if 'joint_axis' in obs_extra_keys: # for TurnFaucet
+                joint_axis_info = apply_pose_to_point(observation['extra']['joint_axis'], to_origin)
+                frame_related_states.append(joint_axis_info)          
+            if 'link_pos' in obs_extra_keys: # for TurnFaucet
+                link_pos_info = apply_pose_to_point(observation['extra']['link_pos'], to_origin)
+                frame_related_states.append(link_pos_info)   
             frame_related_states = np.stack(frame_related_states, axis=0)
             ret['frame_related_states'] = frame_related_states
 
@@ -386,8 +392,14 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             if len(frame_goal_related_poses) > 0:
                 agent_state = np.concatenate([agent_state, frame_goal_related_poses.flatten()])
             for k in obs_extra_keys:
-                if k not in ['tcp_pose', 'goal_pos', 'goal_pose', 'tcp_to_goal_pos', 'tcp_to_goal_pose']:
-                    agent_state = np.concatenate([agent_state, observation['extra'][k].flatten()])
+                if k not in ['tcp_pose', 'goal_pos', 'goal_pose', 
+                             'tcp_to_goal_pos', 'tcp_to_goal_pose',
+                             'joint_axis', 'link_pos']:
+                    val = observation['extra'][k]
+                    agent_state = np.concatenate(
+                        [agent_state, 
+                         val.flatten() if isinstance(val, np.ndarray) else np.array([val])]
+                    )
 
             ret['state'] = agent_state
             return ret
