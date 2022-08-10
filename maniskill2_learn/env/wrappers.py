@@ -293,10 +293,31 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             if "PointCloudPreprocessObsWrapper" not in self.env.__str__():
                 pcd_uniform_downsample(ret, env=self.env, ground_eps=1e-4, num=self.n_points)
             ret['xyz'] = apply_pose_to_points(ret['xyz'], to_origin)
+
+            obs_extra_keys = observation['extra'].keys()
+            goal_pos = None
+            goal_pose = None
+            if 'goal_pos' in obs_extra_keys:
+                goal_pos = observation['extra']['goal_pos']
+            elif 'goal_pose' in obs_extra_keys:
+                goal_pos = observation['extra']['goal_pose'][:3]   
+                goal_pose = observation['extra']['goal_pose']
+                goal_pose = Pose(p=goal_pose[:3], q=goal_pose[3:])
+            tcp_to_goal_pos = None
+            tcp_to_goal_pose = None
+            if 'tcp_to_goal_pos' in obs_extra_keys:
+                tcp_to_goal_pos = observation['extra']['tcp_to_goal_pos']
+            elif 'tcp_to_goal_pose' in obs_extra_keys:
+                tcp_to_goal_pos = observation['extra']['tcp_to_goal_pose'][:3]
+                tcp_to_goal_pose = observation['extra']['tcp_to_goal_pose']
+                tcp_to_goal_pose = Pose(p=tcp_to_goal_pose[:3], q=tcp_to_goal_pose[3:])
+
             if self.n_goal_points > 0:
-                assert 'goal_pos' in observation['extra'].keys(), "n_goal_points should only be used if goal_pos is contained in the environment observation"
+                assert goal_pos is not None, (
+                    "n_goal_points should only be used if goal_pos(e) is contained in the environment observation"
+                )
                 goal_pts_xyz = np.random.uniform(low=-1.0, high=1.0, size=(self.n_goal_points, 3)) * 0.01
-                goal_pts_xyz = goal_pts_xyz + observation['extra']['goal_pos'][None, :]
+                goal_pts_xyz = goal_pts_xyz + goal_pos[None, :]
                 goal_pts_xyz = apply_pose_to_points(goal_pts_xyz, to_origin)
                 goal_pts_rgb = np.zeros_like(goal_pts_xyz)
                 goal_pts_rgb[:, 1] = 1
@@ -309,19 +330,39 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             if 'tcp_pose' in observation['extra'].keys():
                 tcp_info = apply_pose_to_point(observation['extra']['tcp_pose'][:3], to_origin)
                 frame_related_states.append(tcp_info)            
-            if 'goal_pos' in observation['extra'].keys():
-                goal_info = apply_pose_to_point(observation['extra']['goal_pos'], to_origin)
+            if goal_pos is not None:
+                goal_info = apply_pose_to_point(goal_pos, to_origin)
                 frame_related_states.append(goal_info)
-            if 'tcp_to_goal_pos' in observation['extra'].keys():
-                tcp_to_goal_info = apply_pose_to_point(observation['extra']['tcp_to_goal_pos'], to_origin)
+            if tcp_to_goal_pos is not None:
+                tcp_to_goal_info = apply_pose_to_point(tcp_to_goal_pos, to_origin)
                 frame_related_states.append(tcp_to_goal_info)
-            if 'gripper_pose' in observation['extra'].keys():
-                gripper_pose = observation['extra']['gripper_pose']
-                gripper_pose = to_origin * Pose(gripper_pose[:3], gripper_pose[3:])
-                gripper_pose = gripper_pose.p
-                frame_related_states.append(gripper_pose)
+            if 'gripper_pose' in obs_extra_keys:
+                gripper_info = observation['extra']['gripper_pose'][:3]
+                gripper_info = apply_pose_to_point(gripper_info, to_origin)
+                frame_related_states.append(gripper_info)
             frame_related_states = np.stack(frame_related_states, axis=0)
             ret['frame_related_states'] = frame_related_states
+
+            frame_goal_related_poses = [] # 6D poses related to the goal wrt to self.obs_frame
+            if goal_pose is not None:
+                pose_wrt_origin = to_origin * goal_pose
+                frame_goal_related_poses.append(
+                    np.hstack([pose_wrt_origin.p, pose_wrt_origin.q])
+                )
+            if tcp_to_goal_pose is not None:
+                # tcp_to_goal_pose is centered at end-effector frame
+                if self.obs_frame == 'ee':
+                    pose_wrt_origin = tcp_to_goal_pose
+                else:
+                    tcp_pose = observation['extra']['tcp_pose']
+                    p, q = tcp_pose[:3], tcp_pose[3:]
+                    pose_wrt_origin = to_origin * Pose(p=p, q=q) * tcp_to_goal_pose
+                frame_goal_related_poses.append(
+                    np.hstack([pose_wrt_origin.p, pose_wrt_origin.q])
+                )
+            if len(frame_goal_related_poses) > 0:
+                frame_goal_related_poses = np.stack(frame_goal_related_poses, axis=0)
+                ret['frame_goal_related_poses'] = frame_goal_related_poses
 
             ret['to_frames'] = []
             base_pose = observation['agent']['base_pose']
@@ -329,18 +370,23 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             base_frame = (to_origin * Pose(p=base_pose_p, q=base_pose_q)).inv().to_transformation_matrix()
             ret['to_frames'].append(base_frame)
 
-            if 'tcp_pose' in observation['extra'].keys():
+            if 'tcp_pose' in obs_extra_keys:
                 pose = observation['extra']['tcp_pose']
                 pose = Pose(p=pose[:3], q=pose[3:])
                 hand_frame = (to_origin * pose).inv().to_transformation_matrix()
                 ret['to_frames'].append(hand_frame)
+            if goal_pose is not None:
+                goal_frame = (to_origin * goal_pose).inv().to_transformation_matrix()
+                ret['to_frames'].append(goal_frame)
             ret['to_frames'] = np.stack(ret['to_frames'], axis=0) # [Nframe, 4, 4]
 
             agent_state = np.concatenate([observation['agent']['qpos'], observation['agent']['qvel']])
             if len(frame_related_states) > 0:
                 agent_state = np.concatenate([agent_state, frame_related_states.flatten()])
-            for k in observation['extra'].keys():
-                if k not in ['tcp_pose', 'goal_pos', 'tcp_to_goal_pos']:
+            if len(frame_goal_related_poses) > 0:
+                agent_state = np.concatenate([agent_state, frame_goal_related_poses.flatten()])
+            for k in obs_extra_keys:
+                if k not in ['tcp_pose', 'goal_pos', 'goal_pose', 'tcp_to_goal_pos', 'tcp_to_goal_pose']:
                     agent_state = np.concatenate([agent_state, observation['extra'][k].flatten()])
 
             ret['state'] = agent_state
