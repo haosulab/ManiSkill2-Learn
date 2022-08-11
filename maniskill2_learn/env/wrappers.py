@@ -344,7 +344,9 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 gripper_info = apply_pose_to_point(gripper_info, to_origin)
                 frame_related_states.append(gripper_info)
             if 'joint_axis' in obs_extra_keys: # for TurnFaucet
-                joint_axis_info = apply_pose_to_point(observation['extra']['joint_axis'], to_origin)
+                joint_axis_info = (
+                    to_origin.to_transformation_matrix()[:3, :3] @ observation['extra']['joint_axis']
+                )
                 frame_related_states.append(joint_axis_info)          
             if 'link_pos' in obs_extra_keys: # for TurnFaucet
                 link_pos_info = apply_pose_to_point(observation['extra']['link_pos'], to_origin)
