@@ -11,7 +11,7 @@ def select_mask(obs, key, mask):
 
 
 def pcd_filter_ground(pcd, eps=1e-3):
-    return pcd["xyz"][..., -1] > eps
+    return pcd["xyz"][..., 2] > eps
 
 
 def pcd_filter_with_mask(obs, mask, env=None):

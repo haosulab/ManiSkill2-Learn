@@ -273,6 +273,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             Example observation keys and respective shapes ('extra' keys don't necessarily match):
             {'pointcloud': 
                 {'xyz': (32768, 3), 'rgb': (32768, 3)}, 
+                # 'xyz' can also be 'xyzw' with shape (N, 4), 
+                # where the last dim indicates whether the point is inside the camera depth range
              'agent': 
                 {'qpos': 9, 'qvel': 9, 'controller': {'arm': {}, 'gripper': {}}, 'base_pose': 7}, 
              'extra': 
@@ -291,7 +293,17 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             else:
                 print('Unknown Frame', self.obs_frame)
                 exit(0)
-            ret = {mode: observation['pointcloud'][mode] for mode in ['xyz', 'rgb', 'seg'] if mode in observation['pointcloud']}
+
+            pointcloud = observation['pointcloud'].copy()
+            xyzw = pointcloud.pop('xyzw', None)
+            if xyzw is not None:
+                assert 'xyz' not in pointcloud.keys()
+                mask = xyzw[:, -1] > 0.5
+                xyz = xyzw[:, :-1] 
+                for k in pointcloud.keys():
+                    pointcloud[k] = pointcloud[k][mask]
+                pointcloud['xyz'] = xyz[mask] 
+            ret = {mode: pointcloud[mode] for mode in ['xyz', 'rgb', 'robot_seg'] if mode in pointcloud}
 
             ret['rgb'] = ret['rgb'] / 255.0
             if "PointCloudPreprocessObsWrapper" not in self.env.__str__():
