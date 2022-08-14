@@ -3,6 +3,14 @@
 ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manipulation Skill Challenge 2022](https://sapien.ucsd.edu/challenges/maniskill/2022/), a physics-rich generalizable manipulation skill benchmark over diverse objects and diverse rigid & soft-body environments with large-scale demonstrations.
 
 Updates will be posted here.
+
+Aug. 14, 2022: If you encounter such error after training finishes, you can simply ignore it. It does not affect results.
+```
+ImportError: sys.meta_path is None, Python is likely shutting down
+/home/anaconda3/envs/mani_skill2/lib/python3.8/multiprocessing/resource_tracker.py:216: UserWarning: resource_tracker: There appear to be 9 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+```
+
 - [ManiSkill2-Learn](#maniskill2-learn)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
