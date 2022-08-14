@@ -9,6 +9,7 @@ Updates will be posted here.
   - [Simple Workflow](#simple-workflow)
     - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations)
     - [Training and Evaluation](#training-and-evaluation)
+    - [Important Notes for Point Cloud-based Learning (with Demonstrations)](#important-notes-for-point-cloud-based-learning-with-demonstrations)
   - [More Detailed Workflow](#more-detailed-workflow)
     - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations-1)
       - [Demonstration Format and Environment Wrapper](#demonstration-format-and-environment-wrapper)
@@ -124,15 +125,20 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn_dapg.py \
 # to the above commands.
 ```
 
-For point cloud-based learning, there are some useful configurations you can add to `--cfg-options`. A few examples:
-- `"env_cfg.obs_frame=ee"` : transform point cloud to the end-effector frame (instead of the robot base frame by default, i.e. `"env_cfg.obs_frame=base"`) 
-- `"env_cfg.n_goal_points=50"` : if the environment observation contains goal position ("goal_pos"), randomly sample 50 points near the goal position and append to the point cloud; this allows goal info to be visual; if an environment does not have goal position (e.g. in PegInsertionSide-v0), error will be raised
-
-**Note that configuration options like these could significantly affect performance.** For `PickCube-v0`, simultaneously adding both config options above allows PPO to achieve a very high success rate within a few million steps.
 
 For example commands on more algorithms, see `scripts/maniskill/`.
 
 For further details about specific arguments and configs, along with algorithm / wrapper customization, please read [here](#training-and-evaluation-1)
+
+### Important Notes for Point Cloud-based Learning (with Demonstrations)
+
+For point cloud-based learning, there are some useful configurations you can add to `--cfg-options`. A few examples:
+- `"env_cfg.obs_frame=ee"` : transform point cloud to the end-effector frame (instead of the robot base frame by default, i.e. `"env_cfg.obs_frame=base"`) 
+- `"env_cfg.n_goal_points=50"` : if the environment observation contains goal position ("goal_pos"), randomly sample 50 points near the goal position and append to the point cloud; this allows goal info to be visual; if an environment does not have goal position (e.g. in PegInsertionSide-v0), error will be raised.
+
+**Important notes:**
+- Configuration options like these could significantly affect performance. For `PickCube-v0`, simultaneously adding both config options above allows PPO to achieve a very high success rate within a few million steps.
+- If you are using demonstration-based algorithms (e.g. DAPG, GAIL), you need to ensure that the demonstration are rendered using the same setting as during training. For example, if you use `obs_frame=ee` and `n_goal_points=50` during training, then you should ensure that the demonstrations are rendered this way.
 
 
 
