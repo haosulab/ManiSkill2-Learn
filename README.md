@@ -147,7 +147,7 @@ For point cloud-based learning, there are some useful configurations you can add
 **Important notes:**
 - Configuration options like these could significantly affect performance. For `PickCube-v0`, simultaneously adding both config options above allows PPO to achieve a very high success rate within a few million steps.
 - If you are using demonstration-based algorithms (e.g. DAPG, GAIL), you need to ensure that the demonstration are rendered using the same setting as during training. For example, if you use `obs_frame=ee` and `n_goal_points=50` during training, then you should ensure that the demonstrations are rendered this way.
-
+- You can visualize point clouds using the utilities [here](https://github.com/haosulab/ManiSkill2-Learn/blob/main/maniskill2_learn/utils/visualization/o3d_utils.py). You can import such functionalities through `from maniskill2_learn.utils.visualization import visualize_pcd`.
 
 
 
