@@ -335,7 +335,7 @@ class GDict:
                 shape = shape[0]
             return shape
 
-        return self._recursive_do_gdict(self.memory, get_shape)
+        return self._recursive_do_on_memory(self.memory, get_shape)
 
     @property
     def list_shape(self):
@@ -347,32 +347,32 @@ class GDict:
                 shape = list(shape)  # For torch.Size
             return shape
 
-        return self._recursive_do_gdict(self.memory, get_shape)
+        return self._recursive_do_on_memory(self.memory, get_shape)
 
     @property
     def type(self):
-        return self._recursive_do_gdict(self.memory, type)
+        return self._recursive_do_on_memory(self.memory, type)
 
     @property
     def dtype(self):
-        return self._recursive_do_gdict(self.memory, get_dtype)
+        return self._recursive_do_on_memory(self.memory, get_dtype)
 
     @property
     def nbytes(self):
-        return self._recursive_do_gdict(self.memory, get_nbytes)
+        return self._recursive_do_on_memory(self.memory, get_nbytes)
 
     @property
     def is_np(self):
-        return self._recursive_do_gdict(self.memory, is_np)
+        return self._recursive_do_on_memory(self.memory, is_np)
 
     @property
     def is_np_all(self):
-        ret = self._flatten(self._recursive_do_gdict(self.memory, is_np, wrapper=False))
+        ret = self._flatten(self._recursive_do_on_memory(self.memory, is_np))
         return np.alltrue([v for k, v in ret.items()]) if isinstance(ret, dict) else ret
 
     @property
     def nbytes_all(self):
-        ret = self._flatten(self._recursive_do_gdict(self.memory, get_nbytes, wrapper=False))
+        ret = self._flatten(self._recursive_do_on_memory(self.memory, get_nbytes))
         return sum([v for k, v in ret.items()]) if isinstance(ret, dict) else ret
 
     @property
@@ -387,7 +387,7 @@ class GDict:
                 device = f"{device.type}:{device.index}" if device.index is not None else f"{device.type}"
             return device
 
-        return self._recursive_do_gdict(self.memory, get_device)
+        return self._recursive_do_on_memory(self.memory, get_device)
 
     def cpu(self, wrapper=True):
         return self._recursive_do_gdict(self.memory, to_cpu, wrapper=wrapper)
