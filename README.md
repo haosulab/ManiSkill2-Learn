@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Sep. 5, 2022: Change `GDict.shape.memory` to `GDict.shape`; remove `.memory` usage in several places of the codebase.
+
 Aug. 14, 2022: If you encounter such error after training finishes, you can simply ignore it. It does not affect results.
 ```
 ImportError: sys.meta_path is None, Python is likely shutting down
@@ -183,7 +185,7 @@ f = GDict.from_hdf5(TRAJ_PATH)
 print(f.keys()) # dict_keys(['traj_0', 'traj_1', ...])
 traj_0 = f['traj_0']
 
-print(GDict(traj_0).shape.memory)
+print(GDict(traj_0).shape)
 # Depending on --obs-mode, --n-points, etc, this will print, e.g.
 # {'actions': (143, 8), 'dones': (143, 1), 'rewards': (143, 1), 'episode_dones': (143, 1), 
 # 'is_truncated': (143, 1), 'obs': {'frame_related_states': (143, 2, 3), 
@@ -274,7 +276,7 @@ f = GDict.from_hdf5(TRAJ_PATH)
 print(f.keys()) # prints 'traj_0', 'traj_1', etc
 traj_0 = GDict(f['traj_0'])
 
-print(traj_0.shape.memory) 
+print(traj_0.shape) 
 # prints the array shape of all values in the iterated dict
 # For example, {'actions': (344, 8), 'dones': (344, 1), 'rewards': (344, 1), 'episode_dones': (344, 1), 
 # 'is_truncated': (344, 1),'obs': {'frame_related_states': (344, 2, 3), 

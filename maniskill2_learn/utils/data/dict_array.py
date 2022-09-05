@@ -125,20 +125,20 @@ class GDict:
     More Examples:
     >>> GDict(np.ones(3)).memory
     array([1., 1., 1.])
-    >>> GDict(np.ones(3)).shape.memory
+    >>> GDict(np.ones(3)).shape
     3
     >>> d={'a': np.ones([1,1]), 'b': np.ones([2,3])}
     >>> GDict(d).memory
     {'a': array([[1.]]), 'b': array([[1., 1., 1.],
         [1., 1., 1.]])}
-    >>> GDict(d).shape.memory
+    >>> GDict(d).shape
     {'a': (1, 1), 'b': (2, 3)}
     >>> l = [d,d]
     >>> GDict(l).memory
     [{'a': array([[1.]]), 'b': array([[1., 1., 1.],
            [1., 1., 1.]])}, {'a': array([[1.]]), 'b': array([[1., 1., 1.],
            [1., 1., 1.]])}]
-    >>> GDict(l).shape.memory
+    >>> GDict(l).shape
     [{'a': (1, 1), 'b': (2, 3)}, {'a': (1, 1), 'b': (2, 3)}]    
     """
 
@@ -844,9 +844,9 @@ class SharedGDict(GDict):
         if gdict is not None:
             assert shape is None and dtype is None and name is None
             assert isinstance(gdict, GDict) and gdict.is_np_all
-            shape = gdict.shape.memory
-            dtype = gdict.dtype.memory
-            nbytes = gdict.nbytes.memory
+            shape = gdict.shape
+            dtype = gdict.dtype
+            nbytes = gdict.nbytes
         else:
             assert not (shape is None or dtype is None or name is None)
             nbytes = None

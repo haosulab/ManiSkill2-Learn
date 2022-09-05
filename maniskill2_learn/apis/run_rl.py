@@ -416,7 +416,7 @@ def run_one_process(rank, world_size, args, cfg):
         obs_shape = None
         for obs_key in ["inputs", "obs"]:
             if obs_key in replay.memory:
-                obs_shape = replay.memory.slice(0).shape.memory[obs_key]
+                obs_shape = replay.memory.slice(0).shape[obs_key]
                 break
 
     if is_not_null(obs_shape) or is_not_null(action_shape):

@@ -71,7 +71,7 @@ def get_env_info(env_cfg=None, vec_env=None):
     For observation space, we use obs_shape instead of gym observation space which is not easy to use in network building!
     """
     vec_env = build_vec_env(env_cfg.copy()) if vec_env is None else vec_env
-    obs_shape = GDict(vec_env.reset()).slice(0).list_shape.memory
+    obs_shape = GDict(vec_env.reset()).slice(0).list_shape
     action_space = unstack_action_space(vec_env.action_space)
     action = action_space.sample()
     assert isinstance(action_space, (Box, StackedDiscrete)), f"Error type {type(action_space)}!"
