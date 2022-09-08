@@ -281,7 +281,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 {'tcp_pose': 7, 'goal_pos': 3}
             }
             """
-
+            # Calculate coordinate transformations from the world to self.obs_frame
             if self.obs_frame in ['base', 'world']:
                 base_pose = observation['agent']['base_pose']
                 p, q = base_pose[:3], base_pose[3:]
@@ -294,6 +294,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 print('Unknown Frame', self.obs_frame)
                 exit(0)
 
+            # Process point cloud if it is given in 'xyzw' format
             pointcloud = observation['pointcloud'].copy()
             xyzw = pointcloud.pop('xyzw', None)
             if xyzw is not None:
@@ -305,11 +306,14 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 pointcloud['xyz'] = xyz[mask] 
             ret = {mode: pointcloud[mode] for mode in ['xyz', 'rgb', 'robot_seg'] if mode in pointcloud}
 
+            # Process point cloud rgb, downsample point cloud, and transform point cloud coordinates to self.obs_frame
             ret['rgb'] = ret['rgb'] / 255.0
             if "PointCloudPreprocessObsWrapper" not in self.env.__str__():
                 pcd_uniform_downsample(ret, env=self.env, ground_eps=1e-4, num=self.n_points)
             ret['xyz'] = apply_pose_to_points(ret['xyz'], to_origin)
 
+            # Get all kinds of position (pos) and 6D poses (pose) from the observation information
+            # These pos & poses are in world frame for now (transformed later)
             obs_extra_keys = observation['extra'].keys()
             tcp_pose = None
             if 'tcp_pose' in obs_extra_keys:
@@ -327,6 +331,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             if tcp_pose is not None and goal_pos is not None:
                 tcp_to_goal_pos = goal_pos - observation['extra']['tcp_pose'][:3]
 
+            # Append green points near the goal to the point cloud, which serves as visual goal indicator,
+            # if self.n_goal_points is given and the environment returns goal information
             if self.n_goal_points > 0:
                 assert goal_pos is not None, (
                     "n_goal_points should only be used if goal_pos(e) is contained in the environment observation"
@@ -339,6 +345,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 ret['xyz'] = np.concatenate([ret['xyz'], goal_pts_xyz])
                 ret['rgb'] = np.concatenate([ret['rgb'], goal_pts_rgb])            
                 
+            # Transform all kinds of poses to self.obs_frame; these information are dependent on 
+            # the choice of self.obs_frame, so we name them "frame_related_states"
             frame_related_states = []
             base_info = apply_pose_to_point(observation['agent']['base_pose'][:3], to_origin)
             frame_related_states.append(base_info)                
@@ -366,7 +374,10 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             frame_related_states = np.stack(frame_related_states, axis=0)
             ret['frame_related_states'] = frame_related_states
 
-            frame_goal_related_poses = [] # 6D poses related to the goal wrt to self.obs_frame
+            # Transform the goal pose and the pose from the end-effector (tool-center point, tcp) 
+            # to the goal into self.obs_frame; these info are also dependent on the choice of self.obs_frame,
+            # so we name them "frame_goal_related_states"
+            frame_goal_related_poses = []
             if goal_pose is not None:
                 pose_wrt_origin = to_origin * goal_pose
                 frame_goal_related_poses.append(
@@ -382,12 +393,13 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 frame_goal_related_poses = np.stack(frame_goal_related_poses, axis=0)
                 ret['frame_goal_related_poses'] = frame_goal_related_poses
 
+            # ret['to_frames'] returns frame transformation information, which is information that transforms
+            # from self.obs_frame to other common frames (e.g. robot base frame, end-effector frame, goal frame)
             ret['to_frames'] = []
             base_pose = observation['agent']['base_pose']
             base_pose_p, base_pose_q = base_pose[:3], base_pose[3:]
             base_frame = (to_origin * Pose(p=base_pose_p, q=base_pose_q)).inv().to_transformation_matrix()
             ret['to_frames'].append(base_frame)
-
             if tcp_pose is not None:
                 hand_frame = (to_origin * tcp_pose).inv().to_transformation_matrix()
                 ret['to_frames'].append(hand_frame)
@@ -396,6 +408,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 ret['to_frames'].append(goal_frame)
             ret['to_frames'] = np.stack(ret['to_frames'], axis=0) # [Nframe, 4, 4]
 
+            # Obtain final agent state vector, which contains robot proprioceptive information, frame-related states,
+            # and other miscellaneous states (probably important) from the environment
             agent_state = np.concatenate([observation['agent']['qpos'], observation['agent']['qvel']])
             if len(frame_related_states) > 0:
                 agent_state = np.concatenate([agent_state, frame_related_states.flatten()])
@@ -413,6 +427,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
             ret['state'] = agent_state
             return ret
+        
         elif self.obs_mode == 'particles' and 'particles' in observation.keys():
             obs = observation
             xyz = obs['particles']['x']
