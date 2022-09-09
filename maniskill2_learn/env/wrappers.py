@@ -281,7 +281,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 {'tcp_pose': 7, 'goal_pos': 3}
             }
             """
-            # Calculate coordinate transformations from the world to self.obs_frame
+            # Calculate coordinate transformations that transforms poses in the world to self.obs_frame
+            # These "to_origin" coordinate transformations are formally T_{self.obs_frame -> world}^{self.obs_frame}
             if self.obs_frame in ['base', 'world']:
                 base_pose = observation['agent']['base_pose']
                 p, q = base_pose[:3], base_pose[3:]
@@ -333,6 +334,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
             # Append green points near the goal to the point cloud, which serves as visual goal indicator,
             # if self.n_goal_points is given and the environment returns goal information
+            # Also, transform these points to self.obs_frame
             if self.n_goal_points > 0:
                 assert goal_pos is not None, (
                     "n_goal_points should only be used if goal_pos(e) is contained in the environment observation"
@@ -345,7 +347,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 ret['xyz'] = np.concatenate([ret['xyz'], goal_pts_xyz])
                 ret['rgb'] = np.concatenate([ret['rgb'], goal_pts_rgb])            
                 
-            # Transform all kinds of poses to self.obs_frame; these information are dependent on 
+            # Transform all kinds of pos & poses to self.obs_frame; these information are dependent on 
             # the choice of self.obs_frame, so we name them "frame_related_states"
             frame_related_states = []
             base_info = apply_pose_to_point(observation['agent']['base_pose'][:3], to_origin)
@@ -395,6 +397,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
             # ret['to_frames'] returns frame transformation information, which is information that transforms
             # from self.obs_frame to other common frames (e.g. robot base frame, end-effector frame, goal frame)
+            # Each transformation is formally T_{target_frame -> self.obs_frame}^{target_frame}
             ret['to_frames'] = []
             base_pose = observation['agent']['base_pose']
             base_pose_p, base_pose_q = base_pose[:3], base_pose[3:]
