@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Sep. 11, 2022: Added `FrameMiner-MixAction` for point cloud-based manipulation learning from [Frame Mining: a Free Lunch for Learning Robotic Manipulation from 3D Point Clouds](https://openreview.net/forum?id=d-JYso87y6s) (CoRL 2022).
+
 Sep. 5, 2022: Change `GDict.shape.memory` to `GDict.shape`; remove `.memory` usage in several places of the codebase.
 
 Aug. 14, 2022: If you encounter such error after training finishes, you can simply ignore it. It does not affect results.
@@ -121,7 +123,7 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn.py \
 To train a DAPG agent on `PegInsertionSide-v0` with point cloud observation, an example command is shown below (note that DAPG requires loading demonstrations):
 
 ```
-python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn_dapg.py \
+python maniskill2_learn/apis/run_rl.py configs/mfrl/dapg/maniskill2_pn.py \
 --work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
 --cfg-options "env_cfg.env_name=PegInsertionSide-v0" "env_cfg.obs_mode=pointcloud" \
 "env_cfg.n_points=1200" "env_cfg.control_mode=pd_joint_delta_pos" \

@@ -27,7 +27,7 @@ class CNNBase(ExtendedModule):
             feature = []
             if "rgb" in inputs:
                 # inputs images must not have been normalized before
-                feature.append((inputs["rgb"] / 255.0))
+                feature.append(inputs["rgb"] / 255.0)
             if "depth" in inputs:
                 depth = inputs["depth"]
                 if isinstance(depth, torch.Tensor):

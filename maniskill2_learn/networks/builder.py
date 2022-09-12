@@ -40,9 +40,10 @@ def build_model(cfg, default_args=None):
 
 def build_actor_critic(actor_cfg, critic_cfg, shared_backbone=False):
     if shared_backbone:
-        assert actor_cfg["nn_cfg"]["type"] in [
-            "Visuomotor",
-        ] or "Visuomotor" in actor_cfg["nn_cfg"]["type"], f"Only Visuomotor models can share visual backbone. Your model has type {actor_cfg['nn_cfg']['type']}!"
+        assert (
+            actor_cfg["nn_cfg"]["type"] in ["Visuomotor", "FrameMiners"]
+            or "Visuomotor" in actor_cfg["nn_cfg"]["type"]
+        ), f"Only Visuomotor models can share visual backbone. Your model has type {actor_cfg['nn_cfg']['type']}!"
         actor = build_model(actor_cfg)
 
         if getattr(actor.backbone, "visual_nn", None) is not None:

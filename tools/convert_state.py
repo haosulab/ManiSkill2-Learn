@@ -155,7 +155,7 @@ def parse_args():
     parser.add_argument("--obs-mode", default="pointcloud", type=str, help="Observation mode")
     parser.add_argument("--control-mode", default="pd_joint_delta_pos", type=str, help="Environment control Mode")
     parser.add_argument("--reward-mode", default="dense", type=str, choices=["dense", "sparse"], help="Reward Mode (dense / sparse)")
-    parser.add_argument("--with-next", default=False, action="store_true", help="Add next_obs into the output file")    
+    parser.add_argument("--with-next", default=False, action="store_true", help="Add next_obs into the output file (for e.g. SAC+GAIL training)")    
     parser.add_argument("--render", default=False, action="store_true", help="Render the environment while generating demonstrations")
     parser.add_argument("--debug", default=False, action="store_true", help="Debug print")
     parser.add_argument("--force", default=False, action="store_true", help="Force-regenerate the output trajectory file")
