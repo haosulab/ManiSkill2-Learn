@@ -284,14 +284,10 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                     goal_img = goal_img.reshape([H, W, -1])
                 return goal_img
 
-            target_depth = obs["extra"].pop("target_depth", None)
-            if target_depth is not None:
-                target_depth = rearrange_4d_target_to_3d(target_depth)
-                depth = np.concatenate([depth, target_depth], axis=2)
-
             # for environments that use goal image, e.g. Writer-v0, Pinch-v0
             goal_rgb = obs["extra"].pop("goal", None)
-            goal_rgb = goal_rgb or obs["extra"].pop("target_rgb", None)
+            if goal_rgb is None:
+                goal_rgb = obs["extra"].pop("target_rgb", None)
             if goal_rgb is not None:
                 goal_rgb = process_4d_goal_img_to_3d(goal_rgb)
                 goal_rgb = cv2.resize(
@@ -320,6 +316,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                     obs["extra"]["goal_pos"] - obs["extra"]["tcp_pose"][:3]
                 )
 
+            obs['extra'].pop('target_points', None)
             s = flatten_state_dict(obs)
 
             if self.img_size is not None and self.img_size != (
