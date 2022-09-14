@@ -72,8 +72,8 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
         print("Reset kwargs for the current trajectory:", reset_kwargs[cur_episode_num])
         env.reset(**reset_kwargs[cur_episode_num])
 
-        requires_rollout_w_actions = (not 'env_states' in trajectory.keys())
-        if not requires_rollout_w_actions:
+        all_env_states_present = ('env_states' in trajectory.keys())
+        if all_env_states_present:
             length = trajectory['env_states'].shape[0] - 1
         else:
             assert 'env_init_state' in trajectory.keys()
@@ -83,7 +83,7 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
         replay = ReplayMemory(length)
         next_obs = None
         for i in range(length):
-            if not requires_rollout_w_actions:
+            if all_env_states_present:
                 if next_obs is None:
                     env_state = trajectory["env_states"][i]
                     env.set_state(env_state)
