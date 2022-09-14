@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Sep. 14, 2022: Added gzip by default when saving `.hdf5` files.
+
 Sep. 11, 2022: Added `FrameMiner-MixAction` for point cloud-based manipulation learning from [Frame Mining: a Free Lunch for Learning Robotic Manipulation from 3D Point Clouds](https://openreview.net/forum?id=d-JYso87y6s) (CoRL 2022).
 
 Sep. 5, 2022: Change `GDict.shape.memory` to `GDict.shape`; remove `.memory` usage in several places of the codebase.
