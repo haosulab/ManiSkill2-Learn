@@ -319,10 +319,10 @@ class GDict:
         dump_hdf5(self.memory, file)
 
     @classmethod
-    def from_hdf5(cls, file, wrapper=True):
+    def from_hdf5(cls, file, keys=None, wrapper=True):
         from maniskill2_learn.utils.file import load_hdf5
 
-        ret = load_hdf5(file)
+        ret = load_hdf5(file, keys)
         if wrapper:
             ret = cls(ret)
         return ret

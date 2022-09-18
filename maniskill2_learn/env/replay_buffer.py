@@ -3,10 +3,12 @@ import os.path as osp
 from typing import Union
 from tqdm import tqdm
 from itertools import count
+from h5py import File
 
 from maniskill2_learn.utils.meta import get_filename_suffix, get_total_memory, get_memory_list, get_logger, TqdmToLogger, parse_files
 from maniskill2_learn.utils.data import is_seq_of, DictArray, GDict, is_h5, is_null, DataCoder, is_not_null
 from maniskill2_learn.utils.file import load, load_items_from_record, get_index_filenames, get_total_size, FileCache, is_h5_traj, decode_items
+from maniskill2_learn.utils.file.cache_utils import META_KEYS
 from .builder import REPLAYS, build_sampling
 from .sampling_strategy import TStepTransition
 
@@ -125,14 +127,15 @@ class ReplayMemory:
                         self.push_batch(items)
                         tqdm_obj.update(len(items))
                 else:
-                    # For Scannet recently which has vairant input size
                     logger.info(f"Loading full dataset without cache system!")
                     for filename in tqdm(file=TqdmToLogger(), mininterval=60)(buffer_filenames):
-                        data = DictArray.from_hdf5(filename)
+                        file = File(filename, "r")
+                        traj_keys = [key for key in list(file.keys()) if key not in META_KEYS]
+                        if num_samples > 0:
+                            traj_keys = traj_keys[:num_samples]
+                        data = DictArray.from_hdf5(filename, traj_keys)
                         if keys is not None:
                             data = data.select_by_keys(keys)
-                        if num_samples > 0:
-                            data = data.slice(slice(0, num_samples))
                         if is_not_null(data_coder):
                             data = data_coder.decode(data)
                         data = data.to_two_dims()

@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Sep. 18, 2022: Fixed demonstration / replay loading such that when specifying `num_samples=n` (i.e. limit the number of demos loaded per file to be `n`), it will not open the entire `.h5` file, thus saving memory.
+
 Sep. 14, 2022: Added gzip by default when saving `.hdf5` files.
 
 Sep. 11, 2022: Added `FrameMiner-MixAction` for point cloud-based manipulation learning from [Frame Mining: a Free Lunch for Learning Robotic Manipulation from 3D Point Clouds](https://openreview.net/forum?id=d-JYso87y6s) (CoRL 2022).
@@ -35,6 +37,7 @@ ImportError: sys.meta_path is None, Python is likely shutting down
       - [Overview](#overview)
       - [Configuration Files, Networks, and Algorithms](#configuration-files-networks-and-algorithms)
       - [Simulation and Network Parallelism](#simulation-and-network-parallelism)
+      - [Replay Buffer](#replay-buffer)
       - [Some things to keep in mind](#some-things-to-keep-in-mind)
   - [Submission Example](#submission-example)
   - [Other Useful Functionalities](#other-useful-functionalities)
@@ -243,6 +246,12 @@ ManiSkill2-learn provides an easy-to-use interface to support simulation paralle
 - Note that during training, if multiple simulation GPUs are used, then some arguments in the configuration file (e.g. `train_cfg.n_steps`, `replay_cfg.capacity`) are effectively multiplied by the number of simulation GPUs. Similarly, if multiple network-training GPUs are used, then some arguments (e.g. `agent_cfg.batch_size`) are effectively multiplied by the number of network-training GPUs.
 
 **Important note for soft-body environments**: soft-body environments typically consume much more memory than a single rigid-body environment and runs much slower. However, as of now, they do not allow multi-gpu training. Thus currently, the only way to train an agent on these environments is by setting `CUDA_VISIBLE_DEVICES=X` and `--gpu-ids=0`. In addition, to keep the same number of parallel processes during rollout, you need to set a smaller batch size than for rigid-body environments. You can also modify our code in order to accumulate gradient steps.
+
+#### Replay Buffer
+
+For the replay buffer used during online agent rollout, its configuration is specified in the `replay_cfg` dictionary of the config file. Some algorithms (e.g. GAIL) also have `recent_traj_replay_cfg` since the recent rollout trajectories are used for discriminator training. 
+
+For algorithms that use demonstrations (e.g. DAPG, GAIL), additional replay buffers need to be used, and these replay buffers exclusively contain demonstrations (`demo_replay_cfg` for DAPG+PPO, and `expert_replay_cfg` for GAIL+SAC). Since demonstration files can contain many trajectories, and loading all of them could result in out-of-memory, we provided a useful argument `num_samples` to limit the number of demonstration trajectories loaded into the replay buffer **for each file in `buffer_filenames`** (in default configurations, `num_samples=-1`, so all trajectories are loaded). Currently, if `num_samples` is used, then the first `num_samples` trajectories are loaded, instead of randomly sampling trajectories.
 
 #### Some things to keep in mind
 

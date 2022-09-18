@@ -173,14 +173,11 @@ def get_total_size(filenames, record_indices=None, num_samples=-1):
             size = 0
             file = File(filename, "r")
             if is_h5_traj(file):
-                keys = list(file.keys())
+                keys = [key for key in list(file.keys()) if key not in META_KEYS]
                 if num_samples != -1:
                     keys = keys[:num_samples]
                 for key in keys:
-                    if key in META_KEYS:
-                        continue
-                    size_key = len_items(file[key])
-                    size += size_key
+                    size += len_items(file[key])
             else:
                 # Normal h5 dataset
                 len_f = len_items(file)
