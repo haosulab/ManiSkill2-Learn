@@ -131,6 +131,7 @@ class ReplayMemory:
                     for filename in tqdm(file=TqdmToLogger(), mininterval=60)(buffer_filenames):
                         file = File(filename, "r")
                         traj_keys = [key for key in list(file.keys()) if key not in META_KEYS]
+                        traj_keys = sorted(traj_keys)
                         if num_samples > 0:
                             traj_keys = traj_keys[:num_samples]
                         data = DictArray.from_hdf5(filename, traj_keys)
