@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Sep. 25, 2022: Address different action sampling modes during evaluation, since using the mean of gaussian as action output during evaluation could sometimes lead to lower success rates than during training rollouts, where actions are sampled stochastically. See [here](#important-notes-for-evaluation)
+
 Sep. 18, 2022: Fixed demonstration / replay loading such that when specifying `num_samples=n` (i.e. limit the number of demos loaded per file to be `n`), it will not open the entire `.h5` file, thus saving memory.
 
 Sep. 14, 2022: Added gzip by default when saving `.hdf5` files.
@@ -26,6 +28,7 @@ ImportError: sys.meta_path is None, Python is likely shutting down
     - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations)
     - [Training and Evaluation](#training-and-evaluation)
     - [Important Notes for Point Cloud-based Learning (with Demonstrations)](#important-notes-for-point-cloud-based-learning-with-demonstrations)
+    - [Important Notes for Evaluation](#important-notes-for-evaluation)
   - [More Detailed Workflow](#more-detailed-workflow)
     - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations-1)
       - [Demonstration Format and Environment Wrapper](#demonstration-format-and-environment-wrapper)
@@ -157,6 +160,11 @@ For point cloud-based learning, there are some useful configurations you can add
 - Configuration options like these could significantly affect performance. For `PickCube-v0`, simultaneously adding both config options above allows PPO to achieve a very high success rate within a few million steps.
 - If you are using demonstration-based algorithms (e.g. DAPG, GAIL), you need to ensure that the demonstration are rendered using the same setting as during training. For example, if you use `obs_frame=ee` and `n_goal_points=50` during training, then you should ensure that the demonstrations are rendered this way.
 - You can visualize point clouds using the utilities [here](https://github.com/haosulab/ManiSkill2-Learn/blob/main/maniskill2_learn/utils/visualization/o3d_utils.py). You can import such functionalities through `from maniskill2_learn.utils.visualization import visualize_pcd`.
+
+
+### Important Notes for Evaluation
+
+When you run non-Behavior-Cloning RL algorithms (e.g. DAPG+PPO), during training, actions are sampled stochastically, i.e. randomly sampled based on the output gaussian distribution. During evaluation, by default, the gaussian mean is used as action output. However, this could sometimes cause the evaluation result to be a bit lower than during training, for some environments such as `TurnFaucet-v0` and `PickSingleYCB-v0`. This is because noise could be beneficial for success (e.g. adding noise leads to more object grasping attempts). If you encounter this case, you could add `--cfg-options "eval_cfg.sample_mode=sample"` such that the policy will randomly sample actions during evaluation.
 
 
 
