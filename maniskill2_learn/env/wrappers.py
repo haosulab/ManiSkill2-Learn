@@ -395,7 +395,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 ret["seg"] = np.concatenate([ret_visual_seg, ret_actor_seg], axis=-1)
 
             # Process point cloud rgb, downsample point cloud, and transform point cloud coordinates to self.obs_frame
-            ret["rgb"] = ret["rgb"] / 255.0
+            if "rgb" in ret:
+                ret["rgb"] = ret["rgb"] / 255.0
             uniform_downsample_kwargs = {"env": self.env, "ground_eps": 1e-4, "num": self.n_points}
             if "PointCloudPreprocessObsWrapper" not in self.env.__str__():
                 pcd_uniform_downsample(
@@ -451,7 +452,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 goal_pts_rgb = np.zeros_like(goal_pts_xyz)
                 goal_pts_rgb[:, 1] = 1
                 ret["xyz"] = np.concatenate([ret["xyz"], goal_pts_xyz])
-                ret["rgb"] = np.concatenate([ret["rgb"], goal_pts_rgb])
+                if "rgb" in ret:
+                    ret["rgb"] = np.concatenate([ret["rgb"], goal_pts_rgb])
 
             # Transform all kinds of positions to self.obs_frame; these information are dependent on
             # the choice of self.obs_frame, so we name them "frame_related_states"
@@ -530,9 +532,10 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
             # Obtain final agent state vector, which contains robot proprioceptive information, frame-related states,
             # and other miscellaneous states (probably important) from the environment
-            agent_state = np.concatenate(
-                [observation["agent"]["qpos"], observation["agent"]["qvel"]]
-            )
+            if "qpos" in observation["agent"]:
+                agent_state = observation['agent']['qpos']
+            else:
+                agent_state = []
             if len(frame_related_states) > 0:
                 agent_state = np.concatenate(
                     [agent_state, frame_related_states.flatten()]
@@ -637,3 +640,4 @@ class RenderInfoWrapper(ExtendedWrapper):
 
 def build_wrapper(cfg, default_args=None):
     return build_from_cfg(cfg, WRAPPERS, default_args)
+
