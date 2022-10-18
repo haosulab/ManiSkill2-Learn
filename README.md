@@ -27,6 +27,7 @@ ImportError: sys.meta_path is None, Python is likely shutting down
   - [Simple Workflow](#simple-workflow)
     - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations)
     - [Training and Evaluation](#training-and-evaluation)
+    - [Important Notes on Control Mode](#important-notes-on-control-mode)
     - [Important Notes for Point Cloud-based Learning (with Demonstrations)](#important-notes-for-point-cloud-based-learning-with-demonstrations)
     - [Important Notes for Evaluation](#important-notes-for-evaluation)
   - [More Detailed Workflow](#more-detailed-workflow)
@@ -149,6 +150,12 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/dapg/maniskill2_pn.py \
 For example commands on more algorithms, see `scripts/maniskill/`.
 
 For further details about specific arguments and configs, along with algorithm / wrapper customization, please read [here](#training-and-evaluation-1)
+
+### Important Notes on Control Mode
+
+Control modes could play a significant role in agent performance. For example, `pd_ee_delta_pose` generally performs better than `pd_joint_delta_pos`.
+
+To modify control mode, pass in `env_cfg.control_mode={CONTROL_MODE}` to the `--cfg-options` in the training scripts. Note that if you run demonstration-based algorithms (e.g., DAPG, GAIL), the demonstrations need to be converted using the same control mode as training.
 
 ### Important Notes for Point Cloud-based Learning (with Demonstrations)
 
