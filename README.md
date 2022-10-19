@@ -155,7 +155,9 @@ For further details about specific arguments and configs, along with algorithm /
 
 Control modes could play a significant role in agent performance. For example, `pd_ee_delta_pose` generally performs better than `pd_joint_delta_pos`.
 
-To modify control mode, pass in `env_cfg.control_mode={CONTROL_MODE}` to the `--cfg-options` in the training scripts. Note that if you run demonstration-based algorithms (e.g., DAPG, GAIL), the demonstrations need to be converted using the same control mode as training.
+To modify the control mode used for training, pass in `env_cfg.control_mode={CONTROL_MODE}` to the `--cfg-options` in the training scripts above. Note that if you run demonstration-based algorithms (e.g., DAPG, GAIL), the demonstration actions need to be first converted to your desired control mode for training. This is done through `tools/replay_trajectory.py` in **ManiSkill2 (not ManiSkill2-Learn)** (see ManiSkill2 readme). After you convert the demonstration actions to your desired control mode, you can then use `tools/convert_state.py` (see scripts above) to generate visual demonstration observations, and then run the training code.
+
+Another caveat is that some controller names are very similar (e.g. `pd_ee_delta_pos` and `pd_ee_delta_pose`), but they are completely different controllers. Please pay attention to this!
 
 ### Important Notes for Point Cloud-based Learning (with Demonstrations)
 
