@@ -4,8 +4,10 @@ agent_cfg = dict(
     actor_cfg=dict(
         type="ContinuousActor",
         head_cfg=dict(
-            type="TanhHead",
-            noise_std=1e-5,
+            type="GaussianHead",
+            init_log_std=-0.5,
+            clip_return=True,
+            predict_std=False
         ),
         nn_cfg=dict(
             type="Visuomotor",
