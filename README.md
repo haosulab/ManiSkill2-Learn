@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Oct. 18, 2022: Added more example scripts for convenience, along with pretrained models.
+
 Sep. 25, 2022: Address different action sampling modes during evaluation, since using the mean of gaussian as action output during evaluation could sometimes lead to lower success rates than during training rollouts, where actions are sampled stochastically. See [here](#important-notes-for-evaluation)
 
 Sep. 18, 2022: Fixed demonstration / replay loading such that when specifying `num_samples=n` (i.e. limit the number of demos loaded per file to be `n`), it will not open the entire `.h5` file, thus saving memory. Also, add instructions for dynamically loading demonstrations through `dynamic_loading` in the replay buffer configuration.
@@ -24,7 +26,11 @@ ImportError: sys.meta_path is None, Python is likely shutting down
 - [ManiSkill2-Learn](#maniskill2-learn)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
-  - [Simple Workflow](#simple-workflow)
+  - [Example Scripts and Models](#example-scripts-and-models)
+    - [Demonstration Conversion Scripts](#demonstration-conversion-scripts)
+    - [Training Scripts](#training-scripts)
+    - [Pretrained Models and Example Videos](#pretrained-models-and-example-videos)
+  - [Simple Customized Workflow](#simple-customized-workflow)
     - [Converting and Viewing Demonstrations](#converting-and-viewing-demonstrations)
     - [Training and Evaluation](#training-and-evaluation)
     - [Important Notes on Control Mode](#important-notes-on-control-mode)
@@ -77,7 +83,70 @@ sudo apt-get install libsparsehash-dev # brew install google-sparsehash if you u
 pip install torchsparse@git+https://github.com/lz1oceani/torchsparse.git
 ```
 
-## Simple Workflow
+## Example Scripts and Models
+
+In this section, we provide convenient (minimal) examples for training and evaluating a model. If you would like to perform custom training, see the later sections for more detailed information, caveats, etc.
+### Demonstration Conversion Scripts
+
+We have provided example scripts for converting raw demonstrations in ManiSkill2 into the ones ready for downstream training. These scripts are in `./scripts/example_demo_conversion`. Different tasks may use different scripts. Please see the scripts for more details.
+
+### Training Scripts
+
+We have provided example training scripts to reproduce our pretrained models in `./scripts/example_training/pretrained_model`. Please see the scripts for more details. You need to modify the logging directory and the demonstration file path before training. Evaluation is automatically done after training.
+### Pretrained Models and Example Videos
+
+We have provided pretrained models (for tasks that achieve >10% performance) in our google drive. We have also provided example videos to showcase success and failures of each task using our models.
+
+You can download them through the following script:
+
+```
+gdown https://drive.google.com/drive/folders/1VIJRJvazlEmAUjVGW0QJ9-d91D0EzyXm --folder
+cd maniskill2_learn_pretrained_models_videos/
+unzip maniskill2_learn_pretrained_models_videos.zip
+```
+
+To evaluate a DAPG+PPO model on rigid-body tasks, you can use the following script:
+```
+# Although models were trained with DAPG+PPO, since we are now only evaluating models,
+# the demonstrations are not useful here, so we don't need to load the demonstrations through 
+# DAPG configurations, and we can just use PPO configuration to evaluate the model, 
+# as long as the model architecture configurations are the same
+
+# For tasks other than Pick-and-Place (i.e. those that do not start with "Pick"), 
+# you need to remove the argument "env_cfg.n_goal_points=50"
+
+# Evaluating point cloud-based model
+python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_pn.py \
+            --work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
+            --cfg-options "env_cfg.env_name=PickSingleYCB-v0" "env_cfg.obs_mode=pointcloud" "env_cfg.n_points=1200" \
+            "env_cfg.control_mode=pd_ee_delta_pose" "env_cfg.obs_frame=ee" "env_cfg.n_goal_points=50" \
+            "eval_cfg.num=100" "eval_cfg.num_procs=5" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
+            --evaluation --resume-from maniskill2_learn_pretrained_models_videos/PickSingleYCB-v0/dapg_pointcloud/model_25000000.ckpt
+
+# Evaluating RGBD-based model
+python maniskill2_learn/apis/run_rl.py configs/mfrl/ppo/maniskill2_rgbd.py \
+            --work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
+            --cfg-options "env_cfg.env_name=PickSingleYCB-v0" "env_cfg.obs_mode=rgbd" \
+            "env_cfg.control_mode=pd_ee_delta_pose" \
+            "eval_cfg.num=100" "eval_cfg.num_procs=5" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
+            --evaluation --resume-from maniskill2_learn_pretrained_models_videos/PickSingleYCB-v0/dapg_rgbd/model_25000000.ckpt
+```
+
+To evaluate a point cloud-based BC model on soft-body tasks, you can use the following script:
+```
+CUDA_VISIBLE_DEVICES=1 python maniskill2_learn/apis/run_rl.py configs/brl/bc/pointnet_soft_body.py \
+            --work-dir YOUR_LOGGING_DIRECTORY --gpu-ids 0 \
+            --cfg-options "env_cfg.env_name=Excavate-v0" "env_cfg.obs_mode=pointcloud" \
+            "env_cfg.control_mode=pd_joint_delta_pos" \
+            "eval_cfg.num=100" "eval_cfg.num_procs=4" "eval_cfg.save_traj=False" "eval_cfg.save_video=True" \
+            --evaluation --resume-from maniskill2_learn_pretrained_models_videos/Excavate_pcd/model_final.ckpt
+```
+
+You can also submit a pretrained model to our evaluation server if you'd like to. Please see files under `submission_example/` for more details.
+
+
+
+## Simple Customized Workflow
 
 ### Converting and Viewing Demonstrations
 
@@ -147,7 +216,7 @@ python maniskill2_learn/apis/run_rl.py configs/mfrl/dapg/maniskill2_pn.py \
 ```
 
 
-For example commands on more algorithms, see `scripts/maniskill/`.
+For example commands on more algorithms, see `scripts/example_training/`.
 
 For further details about specific arguments and configs, along with algorithm / wrapper customization, please read [here](#training-and-evaluation-1)
 
@@ -251,7 +320,7 @@ If `maniskill2_learn/apis/run_rl.py` is invoked with training mode, `maniskill2_
 
 #### Configuration Files, Networks, and Algorithms
 
-We have included several example configuration files in `configs/` for training an agent using various algorithms with RGB-D or point cloud observation modes. Example scripts are in `scripts/`. 
+We have included several example configuration files in `configs/` for training an agent using various algorithms with RGB-D or point cloud observation modes. Example scripts are in `scripts/example_training`. 
 
 An agent is typically an actor-critic agent (`maniskill2_learn/networks/applications/actor_critic.py`). Algorithms are implemented in `maniskill2_learn/methods/`. Network architectures are implemented in `maniskill2_learn/networks/`. 
 
