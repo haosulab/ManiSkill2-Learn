@@ -90,6 +90,8 @@ In this section, we provide convenient (minimal) examples for training and evalu
 
 We have provided example scripts for converting raw demonstrations in ManiSkill2 into the ones ready for downstream training. These scripts are in `./scripts/example_demo_conversion`. Different tasks may use different scripts. Please see the scripts for more details.
 
+**Some scripts require bash to execute. If you are using another shell, please modify the scripts before executing them.** 
+
 ### Training Scripts
 
 We have provided example training scripts to reproduce our pretrained models in `./scripts/example_training/pretrained_model`. Please see the scripts for more details. You need to modify the logging directory and the demonstration file path before training. Evaluation is automatically done after training.
