@@ -96,10 +96,11 @@ def dump_hdf5(obj, file):
             root_key = root_key.replace("//", "/") if root_key != "" else "GDict"
             if is_arr(memory):
                 memory = to_np(memory)
+                file.create_dataset(name=root_key, data=memory, compression="gzip", compression_opts=5)
             else:
                 from .serialization import dump
                 memory = np.void(dump(memory, file_format="pkl"))
-            file.create_dataset(name=root_key, data=memory, compression="gzip", compression_opts=5)
+                file[root_key] = memory
 
     if not is_h5(file):
         file = File(file, "w")
