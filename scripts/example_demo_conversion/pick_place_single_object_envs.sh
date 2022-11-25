@@ -22,7 +22,7 @@ cd ../ManiSkill2-Learn
 # Generate pointcloud demo; num_procs=64 takes about 30GB memory and 32 cpus
 python tools/convert_state.py \
 --env-name=$ENV \
---num-procs=32 \
+--num-procs=12 \
 --traj-name=../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.h5  \
 --json-name=../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.json \
 --output-name=../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory.none.pd_ee_delta_pose_pointcloud.h5 \
@@ -37,7 +37,7 @@ python tools/convert_state.py \
 # Generate rgbd demo 
 python tools/convert_state.py \
 --env-name=$ENV \
---num-procs=32 \
+--num-procs=12 \
 --traj-name=../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
 --json-name=../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.json \
 --output-name=../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory.none.pd_ee_delta_pose_rgbd.h5 \
