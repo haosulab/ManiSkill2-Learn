@@ -5,13 +5,26 @@
 # i.e. PickSingleYCB-v0, PickSingleEGAD-v0, PickClutter-v0
 ENV="PickSingleYCB-v0" 
 
-# Assume current working directory is ManiSkill2-Learn/
-# Assume conda environment contains all dependencies of ManiSkill2 and ManiSkill2-Learn 
-# Inside ManiSkill2's directory, run merge_trajectory to output merged h5 and json files 
-python tools/merge_trajectory.py \
--i ../ManiSkill2/demos/rigid_body_envs/$ENV/ \
--o ../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory_merged.h5 \
--p trajectory.h5 # this can be replaced with other patterns 
+if [[ $ENV =~ "PickSingleYCB-v0" ]]; then
+    cd ../ManiSkill2/demos/rigid_body_envs/$ENV/
+    if [[ -f "220815.zip" ]]; then
+        unzip 220815.zip
+        rm 220815.zip
+    fi
+    cd - # ManiSkill2-Learn
+    python tools/merge_trajectory.py \
+    -i ../ManiSkill2/demos/rigid_body_envs/$ENV/ \
+    -o ../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory_merged.h5 \
+    -p 0*.h5 # this can be replaced with other patterns 
+else
+    # Assume current working directory is ManiSkill2-Learn/
+    # Assume conda environment contains all dependencies of ManiSkill2 and ManiSkill2-Learn 
+    # Inside ManiSkill2's directory, run merge_trajectory to output merged h5 and json files 
+    python tools/merge_trajectory.py \
+    -i ../ManiSkill2/demos/rigid_body_envs/$ENV/ \
+    -o ../ManiSkill2/demos/rigid_body_envs/$ENV/trajectory_merged.h5 \
+    -p trajectory.h5 # this can be replaced with other patterns 
+fi
 
 # Inside the ManiSkill2's directory, run replay_trajectory.py. See wiki page
 # of ManiSkill2 for more information.
