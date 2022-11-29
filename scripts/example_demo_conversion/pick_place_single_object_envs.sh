@@ -9,7 +9,7 @@ ENV="PickCube-v0"
 # Inside the ManiSkill2's directory, run replay_trajectory.py. See wiki page
 # of ManiSkill2 for more information.
 cd ../ManiSkill2
-python tools/replay_trajectory.py --num-procs 32 \
+python mani_skill2/trajectory/replay_trajectory.py --num-procs 32 \
 --traj-path demos/rigid_body_envs/$ENV/trajectory.h5 \
 --save-traj \
 --target-control-mode pd_ee_delta_pose \

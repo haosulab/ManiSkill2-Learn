@@ -13,7 +13,7 @@ CUDA_VISIBLE_DEVICES=1 python -c "import mani_skill2.envs, gym; env=gym.make('$E
 # Inside the ManiSkill2's directory, run replay_trajectory.py. See wiki page
 # of ManiSkill2 for more information.
 cd ../ManiSkill2
-CUDA_VISIBLE_DEVICES=1 python tools/replay_trajectory.py --num-procs 4 \
+CUDA_VISIBLE_DEVICES=1 python mani_skill2/trajectory/replay_trajectory.py --num-procs 4 \
 --traj-path demos/soft_body_envs/$ENV/trajectory.h5 \
 --save-traj \
 --target-control-mode pd_ee_delta_pose \

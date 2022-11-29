@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Nov. 29, 2022: Modify example scripts to account for ManiSkill2 0.3 breaking change where ManiSkill2 tools/replay_trajectory.py is moved to mani_skill2/trajectory/replay_trajectory.py
+
 Oct. 18, 2022: Added more example scripts for convenience, along with pretrained models.
 
 Sep. 25, 2022: Address different action sampling modes during evaluation, since using the mean of gaussian as action output during evaluation could sometimes lead to lower success rates than during training rollouts, where actions are sampled stochastically. See [here](#important-notes-for-evaluation)
@@ -226,7 +228,7 @@ For further details about specific arguments and configs, along with algorithm /
 
 Control modes could play a significant role in agent performance. For example, `pd_ee_delta_pose` generally performs better than `pd_joint_delta_pos`.
 
-To modify the control mode used for training, pass in `env_cfg.control_mode={CONTROL_MODE}` to the `--cfg-options` in the training scripts above. Note that if you run demonstration-based algorithms (e.g., DAPG, GAIL), the demonstration actions need to be first converted to your desired control mode for training. This is done through `tools/replay_trajectory.py` in **ManiSkill2 (not ManiSkill2-Learn)** (see ManiSkill2 readme). After you convert the demonstration actions to your desired control mode, you can then use `tools/convert_state.py` (see scripts above) to generate visual demonstration observations, and then run the training code.
+To modify the control mode used for training, pass in `env_cfg.control_mode={CONTROL_MODE}` to the `--cfg-options` in the training scripts above. Note that if you run demonstration-based algorithms (e.g., DAPG, GAIL), the demonstration actions need to be first converted to your desired control mode for training. This is done through `mani_skill2/trajectory/replay_trajectory.py` in **ManiSkill2 (not ManiSkill2-Learn)** (see ManiSkill2 readme). After you convert the demonstration actions to your desired control mode, you can then use `tools/convert_state.py` (see scripts above) to generate visual demonstration observations, and then run the training code.
 
 Another caveat is that some controller names are very similar (e.g. `pd_ee_delta_pos` and `pd_ee_delta_pose`), but they are completely different controllers. Please pay attention to this!
 
