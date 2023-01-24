@@ -14,7 +14,7 @@ CUDA_VISIBLE_DEVICES=1 python -c "import mani_skill2.envs, gym; env=gym.make('$E
 # of ManiSkill2 for more information.
 cd ../ManiSkill2
 CUDA_VISIBLE_DEVICES=1 python mani_skill2/trajectory/replay_trajectory.py --num-procs 4 \
---traj-path demos/soft_body_envs/$ENV/trajectory.h5 \
+--traj-path demos/soft_body/$ENV/trajectory.h5 \
 --save-traj \
 --target-control-mode pd_ee_delta_pose \
 --obs-mode none 
@@ -27,9 +27,9 @@ cd ../ManiSkill2-Learn
 CUDA_VISIBLE_DEVICES=1 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=4 \
---traj-name=../ManiSkill2/demos/soft_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
---json-name=../ManiSkill2/demos/soft_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/soft_body_envs/$ENV/trajectory.none.pd_ee_delta_pose_pointcloud.h5 \
+--traj-name=../ManiSkill2/demos/soft_body/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
+--json-name=../ManiSkill2/demos/soft_body/$ENV/trajectory.none.pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/soft_body/$ENV/trajectory.none.pd_ee_delta_pose_pointcloud.h5 \
 --control-mode=pd_ee_delta_pose \
 --max-num-traj=-1 \
 --obs-mode=pointcloud \
@@ -41,9 +41,9 @@ CUDA_VISIBLE_DEVICES=1 python tools/convert_state.py \
 CUDA_VISIBLE_DEVICES=1 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=4 \
---traj-name=../ManiSkill2/demos/soft_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
---json-name=../ManiSkill2/demos/soft_body_envs/$ENV/trajectory.none.pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/soft_body_envs/$ENV/trajectory.none.pd_ee_delta_pose_rgbd.h5 \
+--traj-name=../ManiSkill2/demos/soft_body/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
+--json-name=../ManiSkill2/demos/soft_body/$ENV/trajectory.none.pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/soft_body/$ENV/trajectory.none.pd_ee_delta_pose_rgbd.h5 \
 --control-mode=pd_ee_delta_pose \
 --max-num-traj=-1 \
 --obs-mode=rgbd \
