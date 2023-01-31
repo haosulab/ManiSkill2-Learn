@@ -2,7 +2,7 @@
 
 # For Pick & Place envs with multiple objects, where each object has its own demos,
 # and goal information is provided in the observation
-# i.e. PickSingleYCB-v0, PickSingleEGAD-v0, PickClutter-v0
+# i.e. PickSingleYCB-v0, PickSingleEGAD-v0, PickClutterYCB-v0
 ENV="PickSingleYCB-v0" 
 
 if [[ $ENV =~ "PickSingleYCB-v0" ]]; then
