@@ -45,11 +45,21 @@ def get_gym_env_type(env_name):
     import_env()
     if env_name not in registry.env_specs:
         raise ValueError("No such env")
-    entry_point = registry.env_specs[env_name].entry_point
-    if entry_point.startswith("gym.envs."):
-        type_name = entry_point[len("gym.envs.") :].split(":")[0].split(".")[0]
-    else:
-        type_name = entry_point.split(".")[0]
+    try:
+        entry_point = registry.env_specs[env_name].entry_point
+        if entry_point.startswith("gym.envs."):
+            type_name = entry_point[len("gym.envs.") :].split(":")[0].split(".")[0]
+        else:
+            type_name = entry_point.split(".")[0]
+    except AttributeError as e:
+        # ManiSkill2
+        entry_point = registry.env_specs[env_name].entry_point.func.__code__.co_filename
+        if 'mani_skill2' in entry_point:
+            type_name = 'mani_skill2'
+        else:
+            print("Can't process the entry point: ", entry_point)
+            raise e
+
     return type_name
 
 

@@ -47,12 +47,22 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
         "control_mode": args.control_mode,
         "n_points": args.n_points,
         "n_goal_points": args.n_goal_points,
+        "camera_cfgs": {},
     }
-    env = make_gym_env(**input_dict)
-    assert hasattr(env, "get_obs"), f"env {env} does not contain get_obs"
+    if args.enable_seg:
+        input_dict["camera_cfgs"]["add_segmentation"] = True
 
     with open(args.json_name, "r") as f:
         json_file = json.load(f)
+    
+    env_kwargs = json_file["env_info"]["env_kwargs"]
+    for k in input_dict:
+        env_kwargs.pop(k, None)
+    # update the environment creation args with the extra info from the json file, e.g., cabinet id & target link in OpenCabinetDrawer / Door
+    input_dict.update(env_kwargs)    
+    
+    env = make_gym_env(**input_dict)
+    assert hasattr(env, "get_obs"), f"env {env} does not contain get_obs"
 
     reset_kwargs = {}
     for d in json_file["episodes"]:
@@ -159,6 +169,9 @@ def parse_args():
     parser.add_argument("--render", default=False, action="store_true", help="Render the environment while generating demonstrations")
     parser.add_argument("--debug", default=False, action="store_true", help="Debug print")
     parser.add_argument("--force", default=False, action="store_true", help="Force-regenerate the output trajectory file")
+    
+    # Extra observation args
+    parser.add_argument("--enable-seg", action='store_true', help="Enable ground truth segmentation")
 
     # Specific point cloud generation args
     parser.add_argument("--n-points", default=1200, type=int, 
