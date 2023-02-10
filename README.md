@@ -1,6 +1,6 @@
 # ManiSkill2-Learn
 
-ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manipulation Skill Challenge 2022](https://sapien.ucsd.edu/challenges/maniskill/2022/), a physics-rich generalizable manipulation skill benchmark over diverse objects and diverse rigid & soft-body environments with large-scale demonstrations.
+ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manipulation Skill Challenge 2](https://sapien.ucsd.edu/challenges/maniskill/2022/), a physics-rich generalizable manipulation skill benchmark over diverse objects and diverse rigid & soft-body environments with large-scale demonstrations.
 
 Updates will be posted here.
 
@@ -481,13 +481,13 @@ GAIL implementation and hyperparameters are modified from Hao Shen, Weikang Wan,
 ## Citation
 
 ```
-@inproceedings{mu2021maniskill,
-  title={ManiSkill: Generalizable Manipulation Skill Benchmark with Large-Scale Demonstrations},
-  author={Mu, Tongzhou and Ling, Zhan and Xiang, Fanbo and Yang, Derek Cathera and Li, Xuanlin and Tao, Stone and Huang, Zhiao and Jia, Zhiwei and Su, Hao},
-  booktitle={Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2)},
-  year={2021}
+@inproceedings{gu2023maniskill2,
+          title={ManiSkill2: A Unified Benchmark for Generalizable Manipulation Skills},
+          author={Gu, Jiayuan and Xiang, Fanbo and Li, Xuanlin and Ling, Zhan and Liu, Xiqiaing and Mu, Tongzhou and Tang, Yihe and Tao, Stone and Wei, Xinyue and Yao, Yunchao and Yuan, Xiaodi and Xie, Pengwei and Huang, Zhiao and Chen, Rui and Su, Hao},
+          booktitle={International Conference on Learning Representations},
+          year={2023}
 }
 ```
 
 ## License
-ManiSkill-Learn is released under the Apache 2.0 license, while some specific operations in this library are with other licenses.
+ManiSkill2-Learn is released under the Apache 2.0 license, while some specific operations in this library are with other licenses.
