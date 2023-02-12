@@ -228,7 +228,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
         return next_obs, reward, done, info
 
     def get_obs(self):
-        return self.observation(self.env.get_obs())
+        return self.observation(self.env.observation(self.env.get_obs()))
 
     def observation(self, observation):
         from mani_skill2.utils.common import flatten_state_dict
@@ -248,19 +248,18 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             return observation
         elif self.obs_mode == "rgbd":
             """
-            Example observation keys and respective shapes ('extra' keys don't necessarily match):
+            Example *input* observation keys and respective shapes ('extra' keys don't necessarily match):
             {'image':
                 {'hand_camera':
-                    {'rgb': (128, 128, 3), 'depth': (128, 128, 1), 'camera_intrinsic': (3, 3),
-                    'camera_extrinsic': (4, 4), 'camera_extrinsic_base_frame': (4, 4)
-                    },
+                    {'rgb': (128, 128, 3), 'depth': (128, 128, 1)},
                  'base_camera':
-                    {'rgb': (128, 128, 3), 'depth': (128, 128, 1), 'camera_intrinsic': (3, 3),
-                    'camera_extrinsic': (4, 4)
-                    }
+                    {'rgb': (128, 128, 3), 'depth': (128, 128, 1)}
                 },
              'agent':
                 {'qpos': 9, 'qvel': 9, 'controller': {'arm': {}, 'gripper': {}}, 'base_pose': 7},
+             'camera_param':
+                {'base_camera': {'extrinsic_cv': (4, 4), 'cam2world_gl': (4, 4), 'intrinsic_cv': (3, 3)}, 
+                'hand_camera': {'extrinsic_cv': (4, 4), 'cam2world_gl': (4, 4), 'intrinsic_cv': (3, 3)}}
              'extra':
                 {'tcp_pose': 7, 'goal_pos': 3}}
             """
@@ -317,6 +316,9 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 )
 
             obs['extra'].pop('target_points', None)
+            
+            obs.pop('camera_param', None)
+            
             s = flatten_state_dict(obs)
 
             if self.img_size is not None and self.img_size != (
