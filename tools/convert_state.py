@@ -40,7 +40,7 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
 
     input_dict = {
         "env_name": args.env_name,
-        "unwrapped": True,
+        "unwrapped": False,
         "obs_mode": args.obs_mode,
         "obs_frame": args.obs_frame,
         "reward_mode": args.reward_mode,

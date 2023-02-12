@@ -147,7 +147,6 @@ def make_gym_env(
         fix_seed = kwargs.pop("fix_seed", None)
 
     env = gym.make(env_name, **kwargs)
-
     if env is None:
         print(f"No {env_name} in gym")
         exit(0)
