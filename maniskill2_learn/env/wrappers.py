@@ -265,14 +265,18 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             """
 
             obs = observation
-            rgb, depth = [], []
+            rgb, depth, segs = [], [], []
             imgs = obs["image"]
             for cam_name in imgs:
                 rgb.append(imgs[cam_name]["rgb"])  # each [H, W, 3]
                 depth.append(imgs[cam_name]["depth"])  # each [H, W, 1]
+                if "Segmentation" in imgs[cam_name].keys():
+                    segs.append(imgs[cam_name]["Segmentation"]) # each [H, W, 4], last dim = [mesh_seg, actor_seg, 0, 0]
             rgb = np.concatenate(rgb, axis=2)
             assert rgb.dtype == np.uint8
             depth = np.concatenate(depth, axis=2)
+            if len(segs) > 0:
+                segs = np.concatenate(segs, axis=2)
             obs.pop("image")
 
             def process_4d_goal_img_to_3d(goal_img):
@@ -340,6 +344,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
                 "depth": depth.transpose(2, 0, 1),
                 "state": s,
             }
+            if len(segs) > 0:
+                out_dict["segs"] = segs.transpose(2, 0, 1)
 
             return out_dict
 

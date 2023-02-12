@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Feb. 12, 2023: Codebase updated to factor in some breaking changes in ManiSkill2 0.4. Please pull the latest updates.
+
 Nov. 29, 2022: Modify example scripts to account for ManiSkill2 0.3 breaking change where ManiSkill2 tools/replay_trajectory.py is moved to mani_skill2/trajectory/replay_trajectory.py
 
 Oct. 18, 2022: Added more example scripts for convenience, along with pretrained models.
