@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Mar. 2, 2023: Factor in the environment render gpu config breaking change in ManiSkill2 0.4. Please pull the latest updates. In addition, due to camera setting changes in the latest ManiSkill2, the original pretrained models that were released (in Oct 2022) does not adapt to the current environments. Please retrain the models for now.
+
 Feb. 12, 2023: Codebase updated to factor in some breaking changes in ManiSkill2 0.4. Please pull the latest updates.
 
 Nov. 29, 2022: Modify example scripts to account for ManiSkill2 0.3 breaking change where ManiSkill2 tools/replay_trajectory.py is moved to mani_skill2/trajectory/replay_trajectory.py
@@ -102,6 +104,8 @@ We have provided example training scripts to reproduce our pretrained models in 
 ### Pretrained Models and Example Videos
 
 We have provided pretrained models (for tasks that achieve >10% performance) in our google drive. We have also provided example videos to showcase success and failures of each task using our models.
+
+**Update Mar. 2, 2023: The original pretrained models that were released (in Oct 2022) does not adapt to the current ManiSkill2 (v0.4) environments where the camera configurations were changed from when these models were trained. This causes significantly worse evaluation results. Please retrain the models yourself for now.**
 
 You can download them through the following script:
 

@@ -130,6 +130,12 @@ def make_gym_env(
     if env_type not in ["mani_skill2",]:
         # For environments that cannot specify GPU, we pop device
         kwargs.pop("device", None)
+    
+    if env_type == 'mani_skill2' and 'device' in kwargs.keys():
+        device = kwargs.pop('device')
+        if 'renderer_kwargs' not in kwargs.keys():
+            kwargs['renderer_kwargs'] = {}
+        kwargs['renderer_kwargs']['device'] = device
 
     # Sapien callback system use buffer by default
     if env_type in "maniskill":
