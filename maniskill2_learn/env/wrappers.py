@@ -267,7 +267,17 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             obs = observation
             rgb, depth, segs = [], [], []
             imgs = obs["image"]
-            for cam_name in imgs:
+            
+            # IMPORTANT: the order of cameras can be different across different maniskill2 versions; 
+            # thus we have to explicitly list out camera names so that we ensure that camera orders are consistent
+            if 'hand_camera' in imgs.keys():
+                cam_names = ['hand_camera', 'base_camera']
+            elif 'overhead_camera' in imgs.keys(): # ManiSkill1 environments
+                cam_names = ['overhead_camera_1', 'overhead_camera_2', 'overhead_camera_3']
+            else:
+                raise NotImplementedError()
+            
+            for cam_name in cam_names: 
                 rgb.append(imgs[cam_name]["rgb"])  # each [H, W, 3]
                 depth.append(imgs[cam_name]["depth"])  # each [H, W, 1]
                 if "Segmentation" in imgs[cam_name].keys():
@@ -322,8 +332,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             obs['extra'].pop('target_points', None)
             
             obs.pop('camera_param', None)
-            
-            s = flatten_state_dict(obs)
+            s = flatten_state_dict(obs) # Other observation keys should be already ordered and such orders shouldn't change across different maniskill2 versions, so we just flatten them
 
             if self.img_size is not None and self.img_size != (
                 rgb.shape[0],

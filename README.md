@@ -4,7 +4,9 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
-Mar. 2, 2023: Factor in the environment render gpu config breaking change in ManiSkill2 0.4. Please pull the latest updates. In addition, due to camera setting changes in the latest ManiSkill2, the original pretrained models that were released (in Oct 2022) does not adapt to the current environments. Please retrain the models for now.
+Mar. 25, 2023: **[Breaking change, Important]** Modified `maniskill2_learn/env/wrappers.py` such that camera orders in RGBD observation mode are fixed and consistent, otherwise there can be unexpected performance drops when evaluating an RGBD checkpoint due to the fact that different ManiSkill2 versions can have different camera orders (especially when evaluating our published checkpoints trained on ManiSkill2 0.3.0, which has different camera orders from ManiSkill2 0.4.0). In the latest wrappers in ManiSkill2-Learn, camera orders are fixed as `[hand_camera, base_camera]` and `[overhead_camera_0, overhead_camera_1, overhead_camera_2]` for different environments. Please pull the latest updates. 
+
+Mar. 2, 2023: **[Breaking change, Important]** Factor in the environment render gpu config breaking change in ManiSkill2 0.4. Please pull the latest updates.
 
 Feb. 12, 2023: Codebase updated to factor in some breaking changes in ManiSkill2 0.4. Please pull the latest updates.
 
@@ -104,8 +106,6 @@ We have provided example training scripts to reproduce our pretrained models in 
 ### Pretrained Models and Example Videos
 
 We have provided pretrained models (for tasks that achieve >10% performance) in our google drive. We have also provided example videos to showcase success and failures of each task using our models.
-
-**Update Mar. 2, 2023: The original pretrained models that were released (in Oct 2022) does not adapt to the current ManiSkill2 (v0.4) environments where the camera configurations were changed from when these models were trained. This causes significantly worse evaluation results. Please retrain the models yourself for now.**
 
 You can download them through the following script:
 
