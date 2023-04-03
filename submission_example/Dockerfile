@@ -3,7 +3,6 @@
 
 FROM haosulab/mani-skill2:latest
 
-# RUN rm /usr/local/cuda && ln -s /usr/local/cuda-11.3 /usr/local/cuda
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 # Install additional python packages you need
 RUN conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.3 -c pytorch && pip install pytransform3d
