@@ -40,3 +40,4 @@ plyfile
 einops
 ninja
 pytorch3d
+deprecation

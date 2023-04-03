@@ -642,8 +642,9 @@ class BatchEvaluation:
                     obs_i, episode_done = GDict(self.workers[i].wait()).slice(0, wrapper=False)
                     self.recent_obs.assign((i,), obs_i)
                     num_finished[i] += int(episode_done)
-                    if i == 0 and bool(episode_done):
-                        log_mem_info(self.logger)
+                    # Commenting this out for now; this causes pynvml.nvml.NVMLError_FunctionNotFound for some reason
+                    # if i == 0 and bool(episode_done):
+                    #     log_mem_info(self.logger)
         self.finish()
         if self.enable_merge:
             self.merge_results(n)

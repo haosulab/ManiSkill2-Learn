@@ -1,9 +1,9 @@
 # Before buliding this docker, move this docker file to the parent directory of ManiSkill2-Learn,
 # and move user_solution.py to be directly under ManiSkill2-Learn/ 
 
-FROM haosulab/maniskill2022-challenge:latest
+FROM haosulab/mani-skill2:latest
 
-RUN rm /usr/local/cuda && ln -s /usr/local/cuda-11.3 /usr/local/cuda
+# RUN rm /usr/local/cuda && ln -s /usr/local/cuda-11.3 /usr/local/cuda
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 # Install additional python packages you need
 RUN conda install pytorch==1.11.0 torchvision==0.12.0 cudatoolkit=11.3 -c pytorch && pip install pytransform3d
@@ -37,4 +37,4 @@ RUN pip install pytorch3d \
 # docker run -it --rm -v SOURCE_MOUNT_DIRECTORY:TARGET_PATH --gpus all THIS_DOCKER_NAME:latest  bash
 # You might also need to "export PYTHONPATH=SOME_PATH:$PYTHONPATH"
 
-# Follow https://github.com/haosulab/ManiSkill2/wiki/Participation-Guidelines for docker testing instructions.
+# Follow https://haosulab.github.io/ManiSkill2/benchmark/submission.html for docker testing instructions.
