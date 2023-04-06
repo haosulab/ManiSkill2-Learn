@@ -272,8 +272,8 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             # thus we have to explicitly list out camera names so that we ensure that camera orders are consistent
             if 'hand_camera' in imgs.keys():
                 cam_names = ['hand_camera', 'base_camera']
-            elif 'overhead_camera' in imgs.keys(): # ManiSkill1 environments
-                cam_names = ['overhead_camera_1', 'overhead_camera_2', 'overhead_camera_3']
+            elif 'overhead_camera_0' in imgs.keys(): # ManiSkill1 environments
+                cam_names = ['overhead_camera_0', 'overhead_camera_1', 'overhead_camera_2']
             else:
                 raise NotImplementedError()
             
