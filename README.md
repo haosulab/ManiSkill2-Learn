@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+Apr. 10, 2023: Update README install instructions to symbolically link the ManiSkill2 asset directory to ManiSkill2-Learn, i.e., `ln -s ../ManiSkill2/data data`. This is because environments that require special assets will look for these assets in the current program running directory. Alternatively, you can add `export MS2_ASSET_DIR={path_to_maniskill2}/data` to your bashrc file, so that no matter in which directory you run the environments, the asset directory can always be found. 
+
 Mar. 25, 2023: **[Breaking change, Important]** We modified `maniskill2_learn/env/wrappers.py` such that camera orders in RGBD mode are fixed and consistent, otherwise there can be unexpected performance drops when evaluating a RGBD checkpoint (especially when evaluating our published checkpoints on the latest ManiSkill2 >=0.4.0, where these checkpoints were trained on ManiSkill2 0.3.0). This is due to the fact that camera keys in visual observations are in inconsistent orders across different ManiSkill2 versions. The order of visual observation keys in ManiSkill2 >= 0.4.0 is different from Maniskill2 0.3.0  (i.e., [base_camera, hand_camera] in 0.4.0 and [hand_camera, base_camera] in 0.3.0). Since older ManiSkill2-Learn (prior to Mar. 25, 2023) simply stacks the observations from different cameras without ensuring the order consistency of these cameras, this causes problems.
 
 Thus, we have fixed the camera orders to [hand_camera, base_camera] and [overhead_camera_0, overhead_camera_1, overhead_camera_2] for different environments. Please pull and check the latest updates.
@@ -86,6 +88,9 @@ pip install pytorch3d
 pip install ninja
 pip install -e .
 pip install protobuf==3.19.0
+
+ln -s ../ManiSkill2/data data # link the ManiSkill2 asset directory to ManiSkill2-Learn
+# Alternatively, add `export MS2_ASSET_DIR={path_to_maniskill2}/data` to your bashrc file, so that the OS can find the asset directory no matter where you run MS2 envs.
 ```
 
 If you would like to use SparseConvNet to perform 3D manipulation learning, install `torchsparse` and its releated dependencies (the `torchsparse` below is forked from the original repo with bug fix and additional normalization functionalities):
