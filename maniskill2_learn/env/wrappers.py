@@ -200,7 +200,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
     ):
         super().__init__(env)
         
-        self.ms2_env_name = self.env.unwrapped.spec.id
+        self.ms2_env_name = self.env.spec.id
         self.obs_frame = obs_frame
         if self.obs_mode == "state":
             pass
@@ -230,7 +230,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
         return next_obs, reward, done, info
 
     def get_obs(self):
-        return self.observation(self.env.observation(self.env.unwrapped.get_obs()))
+        return self.observation(self.env.observation(self.env.get_obs()))
 
     def observation(self, observation):
         from mani_skill2.utils.common import flatten_state_dict
@@ -254,7 +254,7 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
             # For envs migrated from ManiSkill1, we need to manually calculate the robot pose and the end-effector pose(s)
             robot_base_link = None
             hand_tcp_links = []
-            for rob_link in self.env.unwrapped.agent.robot.get_links():
+            for rob_link in self.env.agent.robot.get_links():
                 if rob_link.name == 'mobile_base':
                     robot_base_link = rob_link
                 if 'hand_tcp' in rob_link.name:
