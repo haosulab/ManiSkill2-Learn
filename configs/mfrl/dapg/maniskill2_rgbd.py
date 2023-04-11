@@ -32,7 +32,7 @@ agent_cfg = dict(
         ),
         nn_cfg=dict(
             type="Visuomotor",
-            visual_nn_cfg=dict(type="IMPALA", in_channel="image_channels", num_pixels="num_pixels", out_feature_size=384),
+            visual_nn_cfg=dict(type="IMPALA", in_channel="image_channels", image_size="image_size", out_feature_size=384),
             mlp_cfg=dict(
                 type="LinearMLP", norm_cfg=None, mlp_spec=["384 + agent_shape", 256, 128, "action_shape"], bias=True, inactivated_output=True
             ),

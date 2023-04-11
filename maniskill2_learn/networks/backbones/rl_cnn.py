@@ -11,6 +11,7 @@ Nauture CNN:
 import numpy as np
 import torch.nn as nn, torch, torch.nn.functional as F
 from torch.nn import Conv2d
+import math
 
 from maniskill2_learn.networks.modules.weight_init import build_init
 from maniskill2_learn.utils.data import GDict, get_dtype
@@ -50,7 +51,7 @@ class CNNBase(ExtendedModule):
 
 @BACKBONES.register_module()
 class IMPALA(CNNBase):
-    def __init__(self, in_channel, num_pixels, out_feature_size=256, out_channel=None):
+    def __init__(self, in_channel, image_size, out_feature_size=256, out_channel=None):
         super(IMPALA, self).__init__()
         self.in_channel = in_channel
         self.out_channel = out_channel
@@ -109,7 +110,7 @@ class IMPALA(CNNBase):
         self.feat_convs = nn.ModuleList(self.feat_convs)
         self.resnet1 = nn.ModuleList(self.resnet1)
         self.resnet2 = nn.ModuleList(self.resnet2)
-        self.img_feat_size = num_pixels // (4**len(fcs) * 16) * fcs[-1]
+        self.img_feat_size = math.ceil(image_size[0] / (2**len(fcs) * 4)) * math.ceil(image_size[1] / (2**len(fcs) * 4)) * fcs[-1]
 
         self.fc = nn.Linear(self.img_feat_size, out_feature_size)
         self.final = nn.Linear(out_feature_size, self.out_channel) if out_channel else None
