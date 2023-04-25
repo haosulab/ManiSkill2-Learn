@@ -2,7 +2,7 @@
 
 # For general envs with multiple objects, where each object has its own demos,
 # and goal information is not provided in the observation
-# i.e. TurnFaucet-v0, OpenCabinetDoor-v0, OpenCabinetDrawer-v0, PushChair-v0, MoveBucket-v0
+# i.e. TurnFaucet-v0; for ManiSkill1 envs (OpenCabinetDoor/Drawer, PushChair, MoveBucket), please use maniskill1.sh instead of this script)
 ENV="TurnFaucet-v0" 
 
 # unzip the demonstration for TurnFaucet, if not already
