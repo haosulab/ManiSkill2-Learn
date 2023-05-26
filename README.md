@@ -4,6 +4,8 @@ ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manip
 
 Updates will be posted here.
 
+May. 25, 2023: MS1 environments now return robot base pose and end-effector tcp poses in the observations, so we modify `env/wrappers.py` to account for this change. *If you are submitting to our evaluation server, please make sure to use the latest `env/wrappers.py`, as previous versions of our code obtain these poses by querying robot links in the environment, which are not available for the environments on our evaluation server.
+
 Apr. 10, 2023: Update `env/wrappers.py` to account for multiple robot arms (multiple end-effectors / multiple tool center points); fix IMPALA net to handle ManiSkill1 observation shape.
 
 Apr. 10, 2023: Update README install instructions to symbolically link the ManiSkill2 asset directory to ManiSkill2-Learn, i.e., `ln -s ../ManiSkill2/data data`. This is because environments that require special assets will look for these assets in the current program running directory. Alternatively, you can add `export MS2_ASSET_DIR={path_to_maniskill2}/data` to your bashrc file, so that no matter in which directory you run the environments, the asset directory can always be found. 

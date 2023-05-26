@@ -250,21 +250,32 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
         # Note that rgb information returned from the environment must have range [0, 255]
         
-        if 'OpenCabinet' in self.ms2_env_name or 'PushChair' in self.ms2_env_name or 'MoveBucket' in self.ms2_env_name:
-            # For envs migrated from ManiSkill1, we need to manually calculate the robot pose and the end-effector pose(s)
-            robot_base_link = None
-            hand_tcp_links = []
-            for rob_link in self.env.agent.robot.get_links():
-                if rob_link.name == 'mobile_base':
-                    robot_base_link = rob_link
-                if 'hand_tcp' in rob_link.name:
-                    hand_tcp_links.append(rob_link)
-            observation["agent"]["base_pose"] = vectorize_pose(robot_base_link.get_pose()) # [7,]
-            if len(hand_tcp_links) == 1:
-                observation["extra"]["tcp_pose"] = vectorize_pose(hand_tcp_links[0].get_pose()) # [7,]
-            else:
-                assert len(hand_tcp_links) > 1
-                observation["extra"]["tcp_pose"] = np.stack([vectorize_pose(l.get_pose()) for l in hand_tcp_links], axis=0) # [nhands, 7], multi-arm envs
+        # Uncomment this code if you are using earlier version of ManiSkill2 before May 25, 2023
+        # if 'OpenCabinet' in self.ms2_env_name or 'PushChair' in self.ms2_env_name or 'MoveBucket' in self.ms2_env_name:
+        #     # For envs migrated from ManiSkill1, we need to manually calculate the robot pose and the end-effector pose(s)
+        #     robot_base_link = None
+        #     hand_tcp_links = []
+        #     for rob_link in self.env.agent.robot.get_links():
+        #         if rob_link.name == 'mobile_base':
+        #             robot_base_link = rob_link
+        #         if 'hand_tcp' in rob_link.name:
+        #             hand_tcp_links.append(rob_link)
+        #     observation["agent"]["base_pose"] = vectorize_pose(robot_base_link.get_pose()) # [7,]
+        #     if len(hand_tcp_links) == 1:
+        #         observation["extra"]["tcp_pose"] = vectorize_pose(hand_tcp_links[0].get_pose()) # [7,]
+        #     else:
+        #         assert len(hand_tcp_links) > 1
+        #         observation["extra"]["tcp_pose"] = np.stack([vectorize_pose(l.get_pose()) for l in hand_tcp_links], axis=0) # [nhands, 7], multi-arm envs
+        
+        # Comment this portion of code out if you are using earlier version of ManiSkill2 before May 25, 2023
+        if 'PushChair' in self.ms2_env_name or 'MoveBucket' in self.ms2_env_name:
+            try:
+                right_tcp_pose = observation["extra"].pop("right_tcp_pose")
+                left_tcp_pose = observation["extra"].pop("left_tcp_pose")
+                observation["extra"]["tcp_pose"] = np.stack([right_tcp_pose, left_tcp_pose], axis=0) # [nhands, 7], multi-arm envs
+            except KeyError as e:
+                print("base_pose and/or tcp_pose not found in MS1 environment observations. Please see ManiSkill2_ObsWrapper in env/wrappers.py for more details.", flush=True)
+                raise e
 
         if self.obs_mode == "rgbd":
             """
