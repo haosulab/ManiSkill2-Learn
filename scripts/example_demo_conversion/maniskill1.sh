@@ -11,6 +11,7 @@ find demos/rigid_body/$ENV -name "*trajectory.h5" | while read line; do
 
 CUDA_VISIBLE_DEVICES=1 python mani_skill2/trajectory/replay_trajectory.py --num-procs 16 \
 --traj-path $line \
+--use-env-states \
 --save-traj \
 --obs-mode none 
 
