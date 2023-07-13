@@ -299,7 +299,7 @@ class BaseAgent(ExtendedModule):
             item = getattr(self, module_name)
             if isinstance(item, ExtendedModule) and len(item.trainable_parameters) > 0:
                 if module_name not in self._tmp_attrs:
-                    self._tmp_attrs[module_name] = ExtendedDDP(item, device_ids=self._device_ids)
+                    self._tmp_attrs[module_name] = ExtendedDDP(item, device_ids=self._device_ids, find_unused_parameters=True)
                 setattr(self, module_name, self._tmp_attrs[module_name])
 
     def is_data_parallel(self):
