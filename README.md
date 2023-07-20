@@ -2,7 +2,7 @@
 
 ManiSkill2-Learn is a framework for training agents on [SAPIEN Open-Source Manipulation Skill Challenge 2](https://sapien.ucsd.edu/challenges/maniskill/2022/), a physics-rich generalizable manipulation skill benchmark over diverse objects and diverse rigid & soft-body environments with large-scale demonstrations.
 
-Updates will be posted here.
+Jul. 19, 2023: **[Breaking change, Important]** ManiSkill2 is updated to v0.5.0, and environments are updated to the Gymnasium interface inplace of the old OpenAI Gym. ManiSkill2-Learn is updated accordingly. If you are using prior versions of ManiSkill2 (<0.5.0), please use the old ``ms2_gym'' branch of ManiSkill2-Learn.
 
 May. 25, 2023: MS1 environments now return robot base pose and end-effector tcp poses in the observations, so we modify `env/wrappers.py` to account for this change. *If you are submitting to our evaluation server, please make sure to use the latest `env/wrappers.py`, as previous versions of our code obtain these poses by querying robot links in the environment, which are not available for the environments on our evaluation server.
 

@@ -8,7 +8,7 @@ import warnings
 from copy import deepcopy
 from pathlib import Path
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 np.set_printoptions(3)

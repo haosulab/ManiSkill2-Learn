@@ -1,6 +1,6 @@
 from distutils.log import info
 import numpy as np, time
-from gym.core import Env
+from gymnasium.core import Env
 
 from maniskill2_learn.utils.data import (
     DictArray,
@@ -42,7 +42,7 @@ def idle_idx(self):
 def create_buffer_for_env(env, num_envs=1, shared_np=True):
     assert isinstance(env, ExtendedEnv)
     obs = env.reset()
-    item = [obs, np.float32(1.0), True, GDict(env.step(env.action_space.sample())[-1]).to_array().float(), env.render("rgb_array")]
+    item = [obs, np.float32(1.0), True, True, GDict(env.step(env.action_space.sample())[-1]).to_array().float(), env.render()]
     buffer = DictArray(GDict(item).to_array(), capacity=num_envs)
     if shared_np:
         buffer = SharedDictArray(buffer)
@@ -106,11 +106,11 @@ class UnifiedVectorEnvAPI(ExtendedWrapper):
         assert len(actions) == len(idx)
         alls = self.vec_env.step(actions, idx=idx)
         self.recent_obs.assign(slice_idx, alls[0])
-        self.episode_dones[slice_idx] = alls[2]
+        self.episode_dones[slice_idx] = np.logical_or(alls[2], alls[3])
         return GDict(alls).copy(wrapper=False)
 
-    def render(self, mode="rgb_array", idx=None):
-        return self.vec_env.render(mode, self._process_idx(idx)[0])
+    def render(self, idx=None):
+        return self.vec_env.render(self._process_idx(idx)[0])
 
     def step_states_actions(self, *args, **kwargs):
         self.vec_env._assert_id(self.all_env_indices)
@@ -136,8 +136,8 @@ class UnifiedVectorEnvAPI(ExtendedWrapper):
     def set_state(self, state, idx=None):
         return self.call("set_state", state=state, idx=idx)
 
-    def seed(self, seed, idx=None):
-        return self.call("seed", seed=seed, idx=idx)
+    # def seed(self, seed, idx=None):
+    #     return self.call("seed", seed=seed, idx=idx)
 
     def get_env_state(self, idx=None):
         return self.call("get_env_state", idx=idx)
@@ -147,20 +147,20 @@ class UnifiedVectorEnvAPI(ExtendedWrapper):
 
     # Special functions
     def step_dict(self, actions, idx=None, restart=True):
-        from .env_utils import true_done
         idx, slice_idx = self._process_idx(idx)
         obs = self.recent_obs.slice(slice_idx).copy(wrapper=False)
-        next_obs, reward, done, info = self.step(actions, idx=idx)
-        if np.any(done) and restart:
-            self.reset(idx=np.where(done[..., 0])[0])
+        next_obs, reward, terminated, truncated, info = self.step(actions, idx=idx)
+        term_or_trunc = np.logical_or(terminated, truncated)
+        if np.any(term_or_trunc) and restart:
+            self.reset(idx=np.where(term_or_trunc[..., 0])[0])
             
         return dict(
             obs=obs,
             next_obs=next_obs,
             actions=GDict(actions).f64_to_f32(wrapper=False),
             rewards=reward,
-            dones=true_done(done, info),
-            episode_dones=done,
+            dones=terminated,
+            episode_dones=term_or_trunc,
             infos=info,
             worker_indices=idx,
         )
@@ -188,8 +188,8 @@ class VectorEnvBase(Env):
             self.buffers = create_buffer_for_env(self.single_env, self.num_envs, self.SHARED_NP_BUFFER)
             buffers = self.buffers.memory
             self.reset_buffer = DictArray(buffers[0])
-            self.step_buffer = DictArray(buffers[:4])
-            self.vis_img_buffer = DictArray(buffers[4])
+            self.step_buffer = DictArray(buffers[:5])
+            self.vis_img_buffer = DictArray(buffers[5])
 
     def __getattr__(self, name, idx=None):
         if not hasattr(self.single_env, name):
@@ -209,7 +209,7 @@ class VectorEnvBase(Env):
     def step(self, actions, idx=None):
         raise NotImplementedError
 
-    def render(self, mode, idx=None):
+    def render(self, idx=None):
         raise NotImplementedError
 
     def step_states_actions(self, states, actions):
@@ -236,8 +236,8 @@ class VectorEnvBase(Env):
     def get_env_state(self, idx=None):
         return self.call("get_env_state", idx=idx)
 
-    def seed(self, seed, idx=None):
-        raise NotImplementedError
+    # def seed(self, seed, idx=None):
+    #     raise NotImplementedError
 
     def __str__(self):
         return "<{}{}>".format(type(self).__name__, self.single_env)
@@ -262,7 +262,7 @@ class SingleEnv2VecEnv(VectorEnvBase):
         super(SingleEnv2VecEnv, self).__init__(cfgs, **kwargs)
         base_seed = np.random.randint(int(1e9)) if seed is None else seed
         self._env = self.single_env
-        self._env.seed(base_seed)
+        # self._env.seed(base_seed) # seed is removed in gymnasium
         self._init_obs_space()
 
     def _assert_id(self, idx):
@@ -281,8 +281,8 @@ class SingleEnv2VecEnv(VectorEnvBase):
     def step(self, actions, idx=None):
         return self._unsqueeze(self._env.step(actions[0]))
 
-    def render(self, mode, idx=None):
-        return self._unsqueeze(self._env.render(mode))
+    def render(self, idx=None):
+        return self._unsqueeze(self._env.render())
 
     def step_states_actions(self, *args, **kwargs):
         self.dirty = True
@@ -341,9 +341,9 @@ class VectorEnv(VectorEnvBase):
         [self.workers[i].wait() for i in idx]
         return self.step_buffer.slice(slice_idx, wrapper=False)
 
-    def render(self, mode="rgb_array", idx=None):
+    def render(self, idx=None):
         for i in idx:
-            self.workers[i].call("render", mode=mode)
+            self.workers[i].call("render")
         [self.workers[i].wait() for i in idx]
         return self.vis_img_buffer.slice(index_to_slice(idx), wrapper=False)
 
@@ -432,7 +432,7 @@ class SapienThreadEnv(VectorEnvBase):
             self.workers.append(build_env(cfg))
 
         base_seed = np.random.randint(int(1e9)) if seed is None else seed
-        [env.seed(base_seed + i) for i, env in enumerate(self.workers)]
+        # [env.seed(base_seed + i) for i, env in enumerate(self.workers)] # seed is removed in gymnasium
 
         # For step async in sapien
         self._num_finished = 0
@@ -503,18 +503,17 @@ class SapienThreadEnv(VectorEnvBase):
         alls[-1] = self.single_env.deserialize_info(alls[-1])
         return alls
 
-    def render(self, mode="rgb_array", idx=None):
-        if mode == "human":
+    def render(self, idx=None):
+        if self.workers[0].render_mode == "human":
             assert len(self.workers) == 1, "Human rendering only allows num_envs = 1!"
-            return self.workers[0].render(mode)
-        assert mode == "rgb_array", "We only support rgb_array mode for multiple environments!"
+            return self.workers[0].render()
+        assert self.workers[0].render_mode == "rgb_array", "We only support rgb_array mode for multiple environments!"
         [self.workers[i].call_renderer_async(mode="v") for i in idx]
         [self.workers[i].image_wait(mode="v") for i in idx]
         return self.vis_img_buffer.slice(index_to_slice(idx), wrapper=False)
 
     def step_random_actions(self, num):
         # For replay buffer warmup of the RL agent
-        from .env_utils import true_done
 
         obs = self.reset(idx=np.arange(self.num_envs))
         num = int(num)
@@ -523,15 +522,16 @@ class SapienThreadEnv(VectorEnvBase):
             num_i = min(num, self.num_envs)
             actions = self.action_space.sample()[:num_i]
             idx = np.arange(num_i, dtype=np.int32)
-            next_obs, rewards, dones, infos = self.step(actions, idx=idx)
+            next_obs, rewards, terminates, truncates, infos = self.step(actions, idx=idx)
+            term_or_truncs = np.logical_or(terminates, truncates)
             ret_i = dict(
                 obs=obs,
                 next_obs=next_obs,
                 actions=actions,
                 rewards=rewards,
-                dones=true_done(dones, infos),
+                dones=terminates,
                 infos=infos,
-                episode_dones=dones,
+                episode_dones=term_or_truncs,
                 worker_indices=idx[:, None],
             )
             ret.append(GDict(ret_i).to_array().copy(wrapper=False))

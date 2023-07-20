@@ -1,4 +1,4 @@
-from gym.spaces import Discrete, Box
+from gymnasium.spaces import Discrete, Box
 from maniskill2_learn.utils.data import to_torch, GDict, DictArray, recover_with_mask
 from maniskill2_learn.utils.torch import ExtendedModule, avg_grad
 from ..builder import POLICYNETWORKS, VALUENETWORKS, build_backbone, build_reg_head

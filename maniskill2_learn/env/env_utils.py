@@ -1,8 +1,8 @@
 from collections import OrderedDict
-import gym, numpy as np
-from gym.envs import registry
-from gym.spaces import Box, Discrete, Dict
-from gym.wrappers import TimeLimit
+import gymnasium as gym, numpy as np
+from gymnasium.envs import registry
+from gymnasium.spaces import Box, Discrete, Dict
+from gymnasium.wrappers import TimeLimit
 from maniskill2_learn.utils.data import GDict, get_dtype
 from maniskill2_learn.utils.meta import Registry, build_from_cfg, dict_of, get_logger
 from .action_space_utils import StackedDiscrete, unstack_action_space
@@ -19,7 +19,7 @@ def import_env():
 
 def convert_observation_to_space(observation):
     """Convert observation to OpenAI gym observation space (recursively).
-    Modified from gym.envs.mujoco_env
+    Modified from gymnasium.envs.mujoco_env
     """
     if isinstance(observation, (dict)):
         # if not isinstance(observation, OrderedDict):
@@ -43,17 +43,17 @@ def convert_observation_to_space(observation):
 
 def get_gym_env_type(env_name):
     import_env()
-    if env_name not in registry.env_specs:
+    if env_name not in registry:
         raise ValueError("No such env")
     try:
-        entry_point = registry.env_specs[env_name].entry_point
-        if entry_point.startswith("gym.envs."):
-            type_name = entry_point[len("gym.envs.") :].split(":")[0].split(".")[0]
+        entry_point = registry[env_name].entry_point
+        if entry_point.startswith("gymnasium.envs."):
+            type_name = entry_point[len("gymnasium.envs.") :].split(":")[0].split(".")[0]
         else:
             type_name = entry_point.split(".")[0]
     except AttributeError as e:
         # ManiSkill2
-        entry_point = registry.env_specs[env_name].entry_point.func.__code__.co_filename
+        entry_point = registry[env_name].entry_point.func.__code__.co_filename
         if 'mani_skill2' in entry_point:
             type_name = 'mani_skill2'
         else:
@@ -61,19 +61,6 @@ def get_gym_env_type(env_name):
             raise e
 
     return type_name
-
-
-def true_done(done, info):
-    if "TimeLimit.truncated" not in info:  # default is True!
-        return False
-
-    time_truncated = info["TimeLimit.truncated"]
-    if isinstance(done, (bool, np.bool_)):
-        return False if time_truncated else done
-    else:
-        if get_dtype(time_truncated) in ["float32", "float64"]:
-            time_truncated = time_truncated > 0.5
-        return np.logical_and(done, ~time_truncated)
 
 
 def get_env_info(env_cfg=None, vec_env=None):
@@ -151,10 +138,12 @@ def make_gym_env(
         obs_frame = kwargs.pop('obs_frame', 'world')
         ignore_dones = kwargs.pop('ignore_dones', False)
         fix_seed = kwargs.pop("fix_seed", None)
-
+        if 'render_mode' not in kwargs.keys():
+            kwargs['render_mode'] = 'rgb_array'
+            
     env = gym.make(env_name, **kwargs)
     if env is None:
-        print(f"No {env_name} in gym")
+        print(f"No {env_name} in gymnasium")
         exit(0)
 
     use_time_limit = False

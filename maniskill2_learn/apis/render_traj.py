@@ -44,7 +44,7 @@ def render_trajectories(trajectory_file, json_name, env_name, control_mode, vide
         else:
             state = trajectory["env_states"]
             length = state.shape[0]
-        img = env.render("rgb_array")
+        img = env.render()
 
         video_writer = cv2.VideoWriter(osp.join(video_dir, f"{traj_idx}.mp4"), cv2.VideoWriter_fourcc(*"mp4v"), 20, (img.shape[1], img.shape[0]))
         for j in range(length):
@@ -55,7 +55,7 @@ def render_trajectories(trajectory_file, json_name, env_name, control_mode, vide
                     pass# env.set_state(state)
                 else:
                     _ = env.step(trajectory["actions"][j - 1])
-            img = env.render("rgb_array")
+            img = env.render()
             img = img[..., ::-1]
             video_writer.write(img)
         video_writer.release()

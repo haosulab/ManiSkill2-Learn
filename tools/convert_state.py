@@ -34,7 +34,7 @@ def auto_fix_wrong_name(traj):
 tmp_folder_in_docker = "/tmp"
 
 def render(env):
-    viewer = env.render("human")
+    viewer = env.render()
 
 def convert_state_representation(keys, args, worker_id, main_process_id):
 
@@ -48,6 +48,7 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
         "n_points": args.n_points,
         "n_goal_points": args.n_goal_points,
         "camera_cfgs": {},
+        "render_mode": 'human',
     }
     if args.enable_seg:
         input_dict["camera_cfgs"]["add_segmentation"] = True
@@ -100,7 +101,7 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
                     obs = env.get_obs()
                 else:
                     obs = next_obs
-                _, reward, _, _ = env.step(trajectory["actions"][i]) 
+                _, reward, _, _, _ = env.step(trajectory["actions"][i]) 
                 # ^ We cannot directly get rewards when setting env_state. 
                 # Instead, reward is only accurate after env.step(); otherwise e.g. grasp criterion will be inaccurate due to zero impulse
                 next_env_state = trajectory["env_states"][i + 1]
@@ -113,7 +114,7 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
                     obs = env.get_obs()
                 else:
                     obs = next_obs
-                next_obs, reward, _, _ = env.step(trajectory["actions"][i])
+                next_obs, reward, _, _, _ = env.step(trajectory["actions"][i])
 
             item_i = {
                 "obs": obs,

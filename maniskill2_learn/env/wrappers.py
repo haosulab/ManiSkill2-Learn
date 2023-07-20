@@ -2,9 +2,9 @@ from collections import deque
 import cv2
 import numpy as np
 
-from gym import spaces
-from gym.core import ObservationWrapper, Wrapper
-from gym.spaces import Discrete
+from gymnasium import spaces
+from gymnasium.core import ObservationWrapper, Wrapper
+from gymnasium.spaces import Discrete
 
 from maniskill2_learn.utils.data import (
     DictArray,
@@ -38,9 +38,9 @@ class BufferAugmentedEnv(ExtendedWrapper):
     def __init__(self, env, buffers):
         super(BufferAugmentedEnv, self).__init__(env)
         self.reset_buffer = GDict(buffers[0])
-        self.step_buffer = GDict(buffers[:4])
-        if len(buffers) == 5:
-            self.vis_img_buffer = GDict(buffers[4])
+        self.step_buffer = GDict(buffers[:5])
+        if len(buffers) == 6:
+            self.vis_img_buffer = GDict(buffers[5])
 
     def reset(self, *args, **kwargs):
         self.reset_buffer.assign_all(self.env.reset(*args, **kwargs))
@@ -61,13 +61,16 @@ class BufferAugmentedEnv(ExtendedWrapper):
 class ExtendedEnv(ExtendedWrapper):
     """
     Extended api for all environments, which should be also supported by VectorEnv.
+    **All environments should be wrapped by ExtendedEnv when they are built in env_utils.py**
+    **ExtendedEnv should also be the outermost wrapper (except BufferAugmentedEnv)**
 
     Supported extra attributes:
     1. is_discrete, is_cost, reward_scale
 
     Function changes:
     1. step: reward multiplied by a scale, convert all f64 to to_f32
-    2. reset: convert all f64 to to_f32
+    3. reset: convert all f64 to to_f32
+    4. reset: remove reset_info from the return of reset()
 
     Supported extra functions:
     2. step_random_actions
@@ -94,20 +97,17 @@ class ExtendedEnv(ExtendedWrapper):
 
     def reset(self, *args, **kwargs):
         kwargs = dict(kwargs)
-        obs = self.env.reset(*args, **kwargs)
+        obs, _ = self.env.reset(*args, **kwargs) # ignore reset info in gymnasium
         return GDict(obs).f64_to_f32(wrapper=False)
 
     def step(self, action, *args, **kwargs):
         action = self._process_action(action)
-        obs, reward, done, info = self.env.step(action, *args, **kwargs)
-        if isinstance(info, dict) and "TimeLimit.truncated" not in info:
-            info["TimeLimit.truncated"] = False
+        obs, reward, terminated, truncated, info = self.env.step(action, *args, **kwargs)
         obs, info = GDict([obs, info]).f64_to_f32(wrapper=False)
-        return obs, np.float32(reward * self.reward_scale), np.bool_(done), info
+        return obs, np.float32(reward * self.reward_scale), np.bool_(terminated), np.bool_(truncated), info
 
     # The following three functions are available for VectorEnv too!
     def step_random_actions(self, num):
-        from .env_utils import true_done
 
         # print("-----------------------------------------------")
         ret = None
@@ -121,7 +121,7 @@ class ExtendedEnv(ExtendedWrapper):
 
         for i in range(num):
             action = self.action_space.sample()
-            next_obs, rewards, dones, infos = self.step(action)
+            next_obs, rewards, terminated, truncated, infos = self.step(action)
             next_obs = GDict(next_obs).copy(wrapper=False)
 
             info_i = dict(
@@ -129,9 +129,9 @@ class ExtendedEnv(ExtendedWrapper):
                 next_obs=next_obs,
                 actions=action,
                 rewards=rewards,
-                dones=true_done(dones, infos),
+                dones=terminated,
                 infos=GDict(infos).copy(wrapper=False),
-                episode_dones=dones,
+                episode_dones=terminated or truncated,
             )
             info_i = GDict(info_i).to_array(wrapper=False)
             obs = GDict(next_obs).copy(wrapper=False)
@@ -139,7 +139,7 @@ class ExtendedEnv(ExtendedWrapper):
             if ret is None:
                 ret = DictArray(info_i, capacity=num)
             ret.assign(i, info_i)
-            if dones:
+            if terminated or truncated:
                 obs = GDict(self.reset()).copy(wrapper=False)
         return ret.to_two_dims(wrapper=False)
 
@@ -218,16 +218,16 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
     def reset(self, **kwargs):
         if self.fix_seed is not None:
-            obs = self.env.reset(seed=self.fix_seed, **kwargs)
+            obs, reset_info = self.env.reset(seed=self.fix_seed, **kwargs)
         else:
-            obs = self.env.reset(**kwargs)
-        return self.observation(obs)
+            obs, reset_info = self.env.reset(**kwargs)
+        return self.observation(obs), reset_info
 
     def step(self, action):
-        next_obs, reward, done, info = super(ManiSkill2_ObsWrapper, self).step(action)
+        next_obs, reward, terminated, truncated, info = super(ManiSkill2_ObsWrapper, self).step(action)
         if self.ignore_dones:
-            done = False
-        return next_obs, reward, done, info
+            terminated = False
+        return next_obs, reward, terminated, truncated, info
 
     def get_obs(self):
         return self.observation(self.env.observation(self.env.get_obs()))
@@ -653,15 +653,13 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
     def _max_episode_steps(self):
         return self.env.unwrapped._max_episode_steps
 
-    def render(self, mode="human", *args, **kwargs):
-        if mode == "human":
-            self.env.render(mode, *args, **kwargs)
+    def render(self, *args, **kwargs):
+        if self.env.render_mode == "human":
+            self.env.render(*args, **kwargs)
             return
 
-        if mode in ["rgb_array", "color_image"]:
-            img = self.env.render(mode="rgb_array", *args, **kwargs)
-        else:
-            img = self.env.render(mode=mode, *args, **kwargs)
+        img = self.env.render(*args, **kwargs)
+        
         if isinstance(img, dict):
             if "world" in img:
                 img = img["world"]
@@ -683,28 +681,29 @@ class ManiSkill2_ObsWrapper(ExtendedWrapper, ObservationWrapper):
 
 
 class RenderInfoWrapper(ExtendedWrapper):
+            
     def step(self, action):
-        obs, rew, done, info = super().step(action)
+        obs, rew, terminated, truncated, info = super().step(action)
         info["reward"] = rew
         self._info_for_render = info
-        return obs, rew, done, info
+        return obs, rew, terminated, truncated, info
 
     def reset(self, **kwargs):
-        obs = super().reset(**kwargs)
+        obs, reset_info = super().reset(**kwargs)
         # self._info_for_render = self.env.get_info()
         self._info_for_render = {}
-        return obs
+        return obs, reset_info
 
-    def render(self, mode, **kwargs):
+    def render(self, **kwargs):
         from maniskill2_learn.utils.image.misc import put_info_on_image
-
-        if mode == "rgb_array" or mode == "cameras":
-            img = super().render(mode=mode, **kwargs)
+        
+        if self.env.render_mode in ["rgb_array", "cameras"]:
+            img = super().render(**kwargs)
             return put_info_on_image(
                 img, self._info_for_render, extras=None, overlay=True
             )
         else:
-            return super().render(mode=mode, **kwargs)
+            return super().render(**kwargs)
 
 
 def build_wrapper(cfg, default_args=None):

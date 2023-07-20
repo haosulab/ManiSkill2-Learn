@@ -27,7 +27,7 @@ from maniskill2_learn.utils.math import split_num
 from maniskill2_learn.utils.meta import TqdmToLogger, Worker, get_dist_info, get_logger, get_logger_name, get_total_memory, get_meta_info
 
 from .builder import EVALUATIONS
-from .env_utils import build_vec_env, build_env, true_done, get_max_episode_steps
+from .env_utils import build_vec_env, build_env, get_max_episode_steps
 from .replay_buffer import ReplayMemory
 
 
@@ -146,7 +146,7 @@ class FastEvaluation:
 
         if self.save_video:
             video_writers = []
-            imgs = self.vec_env.render(mode="rgb_array", idx=np.arange(num_envs))[..., ::-1]
+            imgs = self.vec_env.render(idx=np.arange(num_envs))[..., ::-1]
             for i in range(num_envs):
                 video_file = osp.join(video_dir, f"{i}.{self.video_format}")
                 video_writers.append(
@@ -184,7 +184,7 @@ class FastEvaluation:
                     f"Episode {traj_idx[0]}, Step {episode_lens[traj_idx[0]]}: Reward: {reward:.3f}, Early Stop or Finish: {done}, Info: {info_str}"
                 )
             if self.save_video:
-                imgs = self.vec_env.render(mode="rgb_array", idx=idx)[..., ::-1]
+                imgs = self.vec_env.render(idx=idx)[..., ::-1]
                 for j, i in enumerate(idx):
                     video_writers[i].write(imgs[j])
             reset_idx = []
@@ -234,7 +234,7 @@ class FastEvaluation:
                 self.reset_pi(pi, reset_idx)
 
                 if self.save_traj:
-                    imgs = self.vec_env.render(mode="rgb_array", idx=reset_idx)[..., ::-1]
+                    imgs = self.vec_env.render(idx=reset_idx)[..., ::-1]
                     for j, i in enumerate(reset_idx):
                         video_file = osp.join(video_dir, f"{traj_idx[i]}.{self.video_format}")
                         video_writers[i] = cv2.VideoWriter(
@@ -322,7 +322,7 @@ class Evaluation:
         assert self.worker_id is None or not use_hidden_state, "Parallel evaluation does not support hidden states!"
         if save_video:
             # Use rendering with use additional 1Gi memory in sapien
-            image = self.vec_env.render("rgb_array")[0, ..., ::-1]
+            image = self.vec_env.render()[0, ..., ::-1]
             self.logger.info(f"Size of image in the rendered video {image.shape}")
 
     def start(self, work_dir=None):
@@ -397,7 +397,7 @@ class Evaluation:
             data_to_store.update(env_state)
 
         if self.save_video:
-            image = self.vec_env.render(mode="rgb_array")[0, ..., ::-1]
+            image = self.vec_env.render()[0, ..., ::-1]
             if self.video_writer is None:
                 self.video_file = osp.join(self.video_dir, f"{self.episode_id}.{self.video_format}")
                 
@@ -430,7 +430,7 @@ class Evaluation:
 
         if episode_done:
             if self.save_video:
-                image = self.vec_env.render(mode="rgb_array")[0, ..., ::-1]
+                image = self.vec_env.render()[0, ..., ::-1]
                 self.video_writer.write(image)
             if self.log_every_episode:
                 self.logger.info(
