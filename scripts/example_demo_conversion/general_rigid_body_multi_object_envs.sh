@@ -7,23 +7,23 @@ ENV="TurnFaucet-v0"
 
 # unzip the demonstration for TurnFaucet, if not already
 if [[ $ENV =~ "TurnFaucet-v0" ]]; then
-    cd ../ManiSkill2/demos/rigid_body/$ENV/
+    cd ../ManiSkill2/demos/v0/rigid_body/$ENV/
     if [[ -f "20220815.zip" ]]; then
         unzip 20220815.zip
         rm 20220815.zip
     fi
     cd - # ManiSkill2-Learn
     python tools/merge_trajectory.py \
-    -i ../ManiSkill2/demos/rigid_body/$ENV/ \
-    -o ../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.h5 \
+    -i ../ManiSkill2/demos/v0/v0/rigid_body/$ENV/ \
+    -o ../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.h5 \
     -p 5*.h5 # this can be replaced with other patterns 
 else
     # Assume current working directory is ManiSkill2-Learn/
     # Assume conda environment contains all dependencies of ManiSkill2 and ManiSkill2-Learn 
     # Inside ManiSkill2's directory, run merge_trajectory to output merged h5 and json files 
     python tools/merge_trajectory.py \
-    -i ../ManiSkill2/demos/rigid_body/$ENV/ \
-    -o ../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.h5 \
+    -i ../ManiSkill2/demos/v0/rigid_body/$ENV/ \
+    -o ../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.h5 \
     -p trajectory.h5 # this can be replaced with other patterns 
 fi
 
@@ -31,7 +31,7 @@ fi
 # of ManiSkill2 for more information.
 cd ../ManiSkill2
 python mani_skill2/trajectory/replay_trajectory.py --num-procs 32 \
---traj-path demos/rigid_body/$ENV/trajectory_merged.h5 \
+--traj-path demos/v0/rigid_body/$ENV/trajectory_merged.h5 \
 --save-traj \
 --target-control-mode pd_ee_delta_pose \
 --obs-mode none
@@ -43,9 +43,9 @@ cd ../ManiSkill2-Learn
 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=12 \
---traj-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.h5  \
---json-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_pointcloud.h5 \
+--traj-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.h5  \
+--json-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_pointcloud.h5 \
 --control-mode=pd_ee_delta_pose \
 --max-num-traj=-1 \
 --obs-mode=pointcloud \
@@ -57,9 +57,9 @@ python tools/convert_state.py \
 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=12 \
---traj-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.h5 \
---json-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_rgbd.h5 \
+--traj-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.h5 \
+--json-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_rgbd.h5 \
 --control-mode=pd_ee_delta_pose \
 --max-num-traj=-1 \
 --obs-mode=rgbd \
@@ -67,10 +67,10 @@ python tools/convert_state.py \
 
 # Shuffle pointcloud demos
 python tools/shuffle_demo.py \
---source-file ../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_pointcloud.h5 \
---target-file ../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_pointcloud_shuffled.h5
+--source-file ../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_pointcloud.h5 \
+--target-file ../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_pointcloud_shuffled.h5
 
 # Shuffle rgbd demos 
 python tools/shuffle_demo.py \
---source-file ../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_rgbd.h5 \
---target-file ../ManiSkill2/demos/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_rgbd_shuffled.h5
+--source-file ../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_rgbd.h5 \
+--target-file ../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory_merged.none.pd_ee_delta_pose_rgbd_shuffled.h5

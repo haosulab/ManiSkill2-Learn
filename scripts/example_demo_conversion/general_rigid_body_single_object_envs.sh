@@ -11,7 +11,7 @@ ENV="StackCube-v0"
 # of ManiSkill2 for more information.
 cd ../ManiSkill2
 python mani_skill2/trajectory/replay_trajectory.py --num-procs 32 \
---traj-path demos/rigid_body/$ENV/trajectory.h5 \
+--traj-path demos/v0/rigid_body/$ENV/trajectory.h5 \
 --save-traj \
 --target-control-mode pd_ee_delta_pose \
 --obs-mode none 
@@ -24,9 +24,9 @@ cd ../ManiSkill2-Learn
 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=12 \
---traj-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
---json-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose_pointcloud.h5 \
+--traj-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
+--json-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose_pointcloud.h5 \
 --control-mode=pd_ee_delta_pose \
 --max-num-traj=-1 \
 --obs-mode=pointcloud \
@@ -38,9 +38,9 @@ python tools/convert_state.py \
 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=12 \
---traj-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
---json-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose_rgbd.h5 \
+--traj-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.h5 \
+--json-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.pd_ee_delta_pose_rgbd.h5 \
 --control-mode=pd_ee_delta_pose \
 --max-num-traj=-1 \
 --obs-mode=rgbd \

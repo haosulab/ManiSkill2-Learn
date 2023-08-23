@@ -7,7 +7,7 @@ ENV="OpenCabinetDrawer-v1"
 # Assume current working directory is ManiSkill2-Learn/
 cd ../ManiSkill2
 
-find demos/rigid_body/$ENV -name "*trajectory.h5" | while read line; do
+find demos/v0/rigid_body/$ENV -name "*trajectory.h5" | while read line; do
 
 CUDA_VISIBLE_DEVICES=1 python mani_skill2/trajectory/replay_trajectory.py --num-procs 16 \
 --traj-path $line \
@@ -23,9 +23,9 @@ Generate pointcloud demo
 python tools/convert_state.py \
 --env-name=$ENV \
 --num-procs=12 \
---traj-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.base_pd_joint_vel_arm_pd_ee_delta_pose.h5 \
---json-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.base_pd_joint_vel_arm_pd_ee_delta_pose.json \
---output-name=../ManiSkill2/demos/rigid_body/$ENV/trajectory.none.base_pd_joint_vel_arm_pd_ee_delta_pose_pointcloud.h5 \
+--traj-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.base_pd_joint_vel_arm_pd_ee_delta_pose.h5 \
+--json-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.base_pd_joint_vel_arm_pd_ee_delta_pose.json \
+--output-name=../ManiSkill2/demos/v0/rigid_body/$ENV/trajectory.none.base_pd_joint_vel_arm_pd_ee_delta_pose_pointcloud.h5 \
 --control-mode=base_pd_joint_vel_arm_pd_joint_vel \
 --max-num-traj=-1 \
 --obs-mode=pointcloud \
