@@ -141,6 +141,7 @@ def convert_state_representation(keys, args, worker_id, main_process_id):
         cnt += 1
         replay.to_hdf5(group, with_traj_index=False)
     output_h5.close()
+    input_h5.close()
     flush_print(f"Finish using {output_file}")
 
 
@@ -198,8 +199,11 @@ def main():
         print(f"Trajectory generation for {args.env_name} with output path {args.output_name} has been completed!!")
         return
 
-    with h5py.File(args.traj_name, "r") as h5_file:
+    with h5py.File(args.traj_name, "r+") as h5_file:
         keys = sorted(h5_file.keys())
+        # remove empty "obs" key from the input h5 file
+        for key in keys:
+            _ = h5_file[key].pop('obs', None)
     if args.max_num_traj < 0:
         args.max_num_traj = len(keys)
     args.max_num_traj = min(len(keys), args.max_num_traj)
