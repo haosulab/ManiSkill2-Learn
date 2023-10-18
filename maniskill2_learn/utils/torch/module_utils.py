@@ -279,9 +279,9 @@ class BaseAgent(ExtendedModule):
             if self.actor.final_mlp is not None:
                 ret["grad/mlp_grad"] = self.actor.final_mlp.grad_norm
 
-    def to_ddp(self, device_ids=None):
+    def to_ddp(self, device_ids=None, find_unused_parameters=True):
         self._device_ids = device_ids
-        self.recover_ddp()
+        self.recover_ddp(find_unused_parameters=find_unused_parameters)
 
     def to_normal(self):
         if self._be_data_parallel and self._device_ids is not None:
@@ -291,7 +291,7 @@ class BaseAgent(ExtendedModule):
                 if isinstance(item, DDP):
                     setattr(self, module_name, item.module)
 
-    def recover_ddp(self):
+    def recover_ddp(self, find_unused_parameters=True):
         if self._device_ids is None:
             return
         self._be_data_parallel = True
@@ -299,7 +299,7 @@ class BaseAgent(ExtendedModule):
             item = getattr(self, module_name)
             if isinstance(item, ExtendedModule) and len(item.trainable_parameters) > 0:
                 if module_name not in self._tmp_attrs:
-                    self._tmp_attrs[module_name] = ExtendedDDP(item, device_ids=self._device_ids, find_unused_parameters=True)
+                    self._tmp_attrs[module_name] = ExtendedDDP(item, device_ids=self._device_ids, find_unused_parameters=find_unused_parameters)
                 setattr(self, module_name, self._tmp_attrs[module_name])
 
     def is_data_parallel(self):

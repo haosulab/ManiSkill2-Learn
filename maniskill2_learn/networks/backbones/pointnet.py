@@ -15,8 +15,6 @@ from ..builder import BACKBONES, build_backbone
 from maniskill2_learn.utils.data import dict_to_seq, split_dim, GDict, repeat
 from maniskill2_learn.utils.torch import masked_average, masked_max, ExtendedModule
 
-from pytorch3d.transforms import quaternion_to_matrix
-
 
 class STNkd(ExtendedModule):
     def __init__(self, k=3, mlp_spec=[64, 128, 1024], norm_cfg=dict(type="BN1d", eps=1e-6), act_cfg=dict(type="ReLU")):

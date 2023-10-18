@@ -8,7 +8,6 @@ References:
 import torch
 import torch.nn as nn
 from torch.nn.modules.batchnorm import _BatchNorm
-from pytorch3d.transforms import quaternion_to_matrix
 
 from torchsparse import SparseTensor
 import torchsparse.nn as spnn

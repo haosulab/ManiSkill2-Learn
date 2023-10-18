@@ -281,7 +281,8 @@ def main_rl(rollout, evaluator, replay, args, cfg, expert_replay=None, recent_tr
             agent = SpSyncBatchNorm.convert_sync_batchnorm(agent)
         except:
             pass
-        agent.to_ddp(device_ids=["cuda"])
+        is_ppo = "ppo" in cfg.agent_cfg.type.lower()
+        agent.to_ddp(device_ids=["cuda"], find_unused_parameters=not is_ppo)
 
     logger.info(f"Work directory of this run {args.work_dir}")
     if len(args.gpu_ids) > 0:
@@ -380,7 +381,7 @@ def run_one_process(rank, world_size, args, cfg):
         # Only the first process will do evaluation
         from maniskill2_learn.env import build_evaluation
 
-        logger.info(f"Build evaluation!")
+        logger.info("Build evaluation!")
         eval_cfg = cfg.eval_cfg
         # Evaluation environment setup can be different from the training set-up. (Like early-stop or object sets)
         if eval_cfg.get("env_cfg", None) is None:

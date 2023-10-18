@@ -33,7 +33,6 @@ docker
 crc32c
 pypi-simple
 numpy-quaternion
-scikit-image==0.18.3
 termcolor
 pymeshlab
 plyfile

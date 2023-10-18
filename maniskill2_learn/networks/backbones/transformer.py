@@ -6,13 +6,9 @@ from ..modules import build_attention_layer
 
 from maniskill2_learn.utils.torch import ExtendedModule
 from maniskill2_learn.utils.data import split_dim, GDict
-
-from pytorch3d.transforms import quaternion_to_matrix
-
 from .mlp import LinearMLP
 
 import numpy as np
-import open3d as o3d
 import time
 
 
