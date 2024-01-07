@@ -120,7 +120,7 @@ class Rollout:
 
             ret = replay.get_all().memory
         else:
-            assert num % self.num_envs == 0, f"{self.num_envs} % {num} != 0, some processes are idle, you are wasting memory!"
+            assert num % self.num_envs == 0, f"{num} % {self.num_envs} != 0, some processes are idle, you are wasting memory!"
             ret = []
             for i in range(num // self.num_envs):
                 action = get_actions()
