@@ -293,7 +293,12 @@ def share_memory(x, y):
     if type(x) != type(y):
         return False
     elif is_np_arr(x):
-        ret = x.base is not None and y.base is not None and x.base == y.base
+        ret = False
+        if x.base is not None and y.base is not None:
+            try:
+                ret = x.base == y.base
+            except ValueError as e:
+                ret = False
         return ret.any() if is_np_arr(ret) else ret
     elif is_torch(x):
         sign = x.storage().data_ptr() == y.storage().data_ptr()
